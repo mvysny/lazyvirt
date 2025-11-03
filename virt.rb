@@ -27,6 +27,8 @@ end
 #   "actively" used by the QEMU process on the host system. QEMU by default
 #   only allocates the pages on demand when they are first accessed. A newly started VM actually
 #   uses only very few pages, but the number of pages increases with each new memory allocation.
+#
+# More info here: https://pmhahn.github.io/virtio-balloon/
 class MemStat < Data.define(:actual, :unused, :available, :usable, :disk_caches, :rss)
 end
 
