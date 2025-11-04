@@ -6,8 +6,16 @@ Future plans:
 - Implement a full-blown TUI (using `tty-box` and `tty-screen`)
 - Automatic balloon control (needs to be enabled)
 
+## Setup
+
+```
+bundle install
+bundle exec rake test
+```
+
 ## Running
 
 ```
-ruby lazyvirt.rb
+ruby lib/lazyvirt.rb
 ```
+
