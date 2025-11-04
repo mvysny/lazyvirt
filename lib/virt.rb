@@ -78,6 +78,7 @@ end
 # Install program via `sudo apt install libvirt-clients`
 class VirtCmd
   # Returns all domains, in all states.
+  # @param virsh_list [String | nil] Output of `virsh list --all`, for testing only
   # @return [Array<Domain>] domains
   def domains(virsh_list = nil)
     virsh_list = virsh_list || `virsh list --all`
@@ -96,6 +97,7 @@ class VirtCmd
   # Runtime memory stats. Only available when the VM is running.
   #
   # @param domain [Domain] domain
+  # @param virsh_dommemstat [String | nil] output of `virsh dommemstat`, for testing only
   # @return [MemStat]
   def memstat(domain, virsh_dommemstat = nil)
     virsh_dommemstat = virsh_dommemstat || `virsh dommemstat #{domain.id}`
