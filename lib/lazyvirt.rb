@@ -105,6 +105,7 @@ trap("WINCH") do
   screen.calculate_window_sizes
 end
 
+# https://github.com/jmettraux/rufus-scheduler
 scheduler.every '3s' do
   screen.update_data
 end
