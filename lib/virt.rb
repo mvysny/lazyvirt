@@ -1,3 +1,5 @@
+require_relative 'sysinfo'
+
 # A virt domain (=VM).
 #
 # - `id` {Integer | nil} - temporary ID, only available when running
@@ -14,23 +16,23 @@ end
 
 # VM memory stats
 #
-# - `actual` {Integer} The actual memory size in KiB available with ballooning enabled.
-# - `available` {Integer} Memory in KiB available for the guest OS. Inside the Linux kernel this is named MemTotal. This is
+# - `actual` {Integer} The actual memory size in bytes available with ballooning enabled.
+# - `available` {Integer} Memory in bytes available for the guest OS. Inside the Linux kernel this is named `MemTotal`. This is
 #   the maximum allowed memory, which is slightly less than the currently configured
 #   memory size, as the Linux kernel and BIOS need some space for themselves.
 #   `nil` if ballooning is unavailable.
-# - `unused` {Integer}  Inside the Linux kernel this actually is named MemFree.
+# - `unused` {Integer}  Inside the Linux kernel this actually is named `MemFree`.
 #   That memory is available for immediate use as it is currently neither used by processes
 #   or the kernel for caching. So it is really unused (and is just eating energy and provides no benefit).
 #   `nil` if ballooning is unavailable.
-# - `usable` {Integer} Inside the Linux kernel this is named MemAvailable. This consists
+# - `usable` {Integer} Inside the Linux kernel this is named `MemAvailable`. This consists
 #   of the free space plus the space, which can be easily reclaimed. This for example includes
 #   read caches, which contain data read from IO devices, from which the data can be read
 #   again if the need arises in the future.
 #   `nil` if ballooning is unavailable.
-# - `disk_caches` {Integer} disk cache size in KiB.
+# - `disk_caches` {Integer} disk cache size in bytes.
 #   `nil` if ballooning is unavailable.
-# - `rss` {Integer} The resident set size in KiB, which is the number of pages currently
+# - `rss` {Integer} The resident set size in bytes, which is the number of pages currently
 #   "actively" used by the QEMU process on the host system. QEMU by default
 #   only allocates the pages on demand when they are first accessed. A newly started VM actually
 #   uses only very few pages, but the number of pages increases with each new memory allocation.
@@ -40,6 +42,25 @@ class MemStat < Data.define(:actual, :unused, :available, :usable, :disk_caches,
   def ballooning_available?
     !(available.nil? or unused.nil? or usable.nil? or disk_caches.nil?)
   end
+  
+  # @return [MemoryUsage | nil] the guest memory stats or nil if unavailable.
+  def guest_mem
+    guest_data_available? ? MemoryUsage.new(available, usable) : nil
+  end
+  
+  # Returns true if the guest memory data is available. false if the VM doesn't report guest data,
+  # probably because ballooning service isn't running, or virt guest tools aren't installed,
+  # or the VM lacks the ballooning device.
+  # @return [Boolean] true if the guest data is available
+  def guest_data_available?
+    available != nil && usable != nil && disk_caches != nil && unused != nil
+  end
+  
+  def to_s
+    result = "#{format_byte_size(actual)}(rss=#{format_byte_size(rss)})"
+    result += "; guest: #{guest_mem} (unused=#{format_byte_size(unused)}, disk_caches=#{format_byte_size(disk_caches)})" if guest_data_available?
+    result
+  end
 end
 
 # VM information
@@ -47,8 +68,8 @@ end
 # - `os_type` {String} e.g. `hvm`
 # - `state` {Symbol} one of `:running`, `:shut_off`, `:paused`, `:other`
 # - `cpus` {Integer} number of CPUs allocated
-# - `max_memory` {Integer} maximum memory allocated to a VM, in KiB. {MemStat.actual} can never be more than this.
-# - `used_memory` {Integer} Current value of {MemStat.actual}
+# - `max_memory` {Integer} maximum memory allocated to a VM, in bytes. {MemStat.actual} can never be more than this.
+# - `used_memory` {Integer} Current value of {MemStat.actual}, in bytes.
 # - `persistent` {Boolean}
 # - `security_model` {String} e.g. `apparmor`
 class DomainInfo < Data.define(:os_type, :state, :cpus, :max_memory, :used_memory, :persistent, :security_model)
@@ -80,12 +101,12 @@ class VirtCmd
   #
   # @param domain [Domain] domain
   # @return [MemStat]
-  def memstat(domain)
-    lines = `virsh dommemstat #{domain.id}`.lines
-    values = lines.filter { |it| !it.strip.empty? } .map { |it| it.strip.split } .to_h
-    MemStat.new(actual: values['actual'].to_i, unused: values['unused']&.to_i,
-      available: values['available']&.to_i, usable: values["usable"]&.to_i,
-      disk_caches: values["disk_caches"]&.to_i, rss: values["rss"].to_i)
+  def memstat(domain, virsh_dommemstat = nil)
+    virsh_dommemstat = virsh_dommemstat || `virsh dommemstat #{domain.id}`
+    values = virsh_dommemstat.lines.filter { |it| !it.strip.empty? } .map { |it| it.strip.split } .to_h
+    MemStat.new(actual: values['actual'].to_i * 1024, unused: values['unused']&.to_i&.*(1024),
+      available: values['available']&.to_i&.*(1024), usable: values["usable"]&.to_i&.*(1024),
+      disk_caches: values["disk_caches"]&.to_i&.*(1024), rss: values["rss"].to_i * 1024)
   end
   
   # Domain (VM) information. Also available when VM is shut off.
@@ -99,8 +120,8 @@ class VirtCmd
     values = values.transform_values(&:strip)
     state = values['State'].gsub(' ', '_').to_sym
     DomainInfo.new(os_type: values['OS Type'], state: state, cpus: values['CPU(s)'].to_i,
-      max_memory: values['Max memory'].to_i,
-      used_memory: values['Used memory'].to_i,
+      max_memory: values['Max memory'].to_i * 1024,
+      used_memory: values['Used memory'].to_i * 1024,
       persistent: values['Persistent'] == 'yes',
       security_model: values['Security model'])
   end
