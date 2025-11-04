@@ -4,6 +4,7 @@ require 'sysinfo'
 require 'tty-cursor'
 require 'tty-screen'
 require 'rufus-scheduler'
+require 'io/console'
 
 scheduler = Rufus::Scheduler.new
 
@@ -78,12 +79,12 @@ class Screen
   end
   
   # Clears the TTY screen
-  def clear_screen
+  def clear
     print TTY::Cursor.move_to(0, 0), TTY::Cursor.clear_screen
   end
   
-  def paint
-    clear_screen
+  def calculate_window_sizes
+    clear
     sh, sw = TTY::Screen.size
     left_pane_w = sw / 2
     @system.rect = Rect.new(0, 0, left_pane_w, 4)
@@ -92,8 +93,20 @@ class Screen
 end
 
 screen = Screen.new(virt)
-screen.paint
+screen.calculate_window_sizes
 
+# Trap the WINCH signal (sent on terminal resize)
+trap("WINCH") do
+  screen.calculate_window_sizes
+end
 
-sleep 1
+loop do
+  char = STDIN.getch
+  break if char == 'q'
 
+  # Show the code point (helps debug escape sequences)
+  printf "Got: %p (ord: %d)\n", char, char.ord
+end
+
+scheduler.shutdown
+screen.clear
