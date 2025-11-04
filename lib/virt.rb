@@ -53,7 +53,8 @@ class MemStat < Data.define(:actual, :unused, :available, :usable, :disk_caches,
   end
   
   def to_s
-    result = "#{format_byte_size(actual)}(rss=#{format_byte_size(rss)})"
+    result = "#{format_byte_size(actual)}"
+    result += "(rss=#{format_byte_size(rss)})" if !rss.nil?
     result += "; guest: #{guest_mem} (unused=#{format_byte_size(unused)}, disk_caches=#{format_byte_size(disk_caches)})" if guest_data_available?
     result
   end
@@ -154,10 +155,13 @@ LIBVIRT_GEM_AVAILABLE = library_available? 'libvirt'
 #
 # - RubyDoc: https://ruby.libvirt.org/api/index.html
 # - Library homepage: https://ruby.libvirt.org/
-class LibVirt
+#
+# WARNING: Currently doesn't retrieve all memory stats, making it unsuitable for ballooning!
+class LibVirtClient
   def initialize
     raise 'libvirt gem not available' unless LIBVIRT_GEM_AVAILABLE
     @conn = Libvirt::open("qemu:///system")
+    @states = {Libvirt::Domain::PAUSED => :paused, Libvirt::Domain::RUNNING => :running, 5 => :shut_off}
   end
   
   def close
@@ -169,15 +173,14 @@ class LibVirt
   def domains()
     running_vm_ids = @conn.list_domains
     stopped_vm_names = @conn.list_defined_domains
-    states = {Libvirt::Domain::PAUSED => :paused, Libvirt::Domain::RUNNING => :running, 5 => :shut_off}
     running = running_vm_ids.map do |id|
       d = @conn.lookup_domain_by_id(id)    # Libvirt::Domain
-      state = states[d.state[0]] || :other
+      state = @states[d.state[0]] || :other
       Domain.new(id, d.name, state)
     end
     stopped = stopped_vm_names.map do |name|
       d = @conn.lookup_domain_by_name(name)    # Libvirt::Domain
-      state = states[d.state[0]] || :other
+      state = @states[d.state[0]] || :other
       Domain.new(nil, name, state)
     end
     running + stopped
@@ -186,6 +189,41 @@ class LibVirt
   # @return [Boolean] whether this virt client is available
   def self.available?
     LIBVIRT_GEM_AVAILABLE
+  end
+
+  # Runtime memory stats. Only available when the VM is running.
+  #
+  # WARNING: RETURNS INCOMPLETE DATA!!!
+  #
+  # @param domain [Domain] domain
+  # @return [MemStat]
+  def memstat(domain)
+    raise 'domain not running' if domain.id.nil?
+    # Array<Libvirt::Domain::MemoryStats>
+    mstats = @conn.lookup_domain_by_id(domain.id).memory_stats
+    values = mstats.map { |it| [it.tag, it.instance_variable_get(:@val)] } .to_h
+    MemStat.new(actual: values[Libvirt::Domain::MemoryStats::ACTUAL_BALLOON].to_i * 1024,
+      unused: values[Libvirt::Domain::MemoryStats::UNUSED]&.to_i&.*(1024),
+      available: values[Libvirt::Domain::MemoryStats::AVAILABLE]&.to_i&.*(1024),
+      usable: nil, #values[Libvirt::Domain::MemoryStats::USABLE]&.to_i&.*(1024),
+      disk_caches: nil, #values[Libvirt::Domain::MemoryStats::DISK_CACHES]&.to_i&.*(1024),
+      rss: values[Libvirt::Domain::MemoryStats::RSS]&.to_i&.*(1024))
+  end
+
+  # Domain (VM) information. Also available when VM is shut off.
+  #
+  # @param domain [Domain] domain
+  # @return [DomainInfo]
+  def dominfo(domain)
+    d = @conn.lookup_domain_by_id(domain.id) unless domain.id.nil?
+    d = d || @conn.lookup_domain_by_name(domain.name)
+    # Libvirt::Domain::Info
+    info = d.info
+    DomainInfo.new(os_type: nil, state: @states[info.state] || :other, cpus: info.nr_virt_cpu,
+      max_memory: info.max_mem * 1024,
+      used_memory: info.memory * 1024,
+      persistent: nil,
+      security_model: nil)
   end
 end
 

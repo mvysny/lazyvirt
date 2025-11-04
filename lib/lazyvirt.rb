@@ -4,6 +4,7 @@ require 'sysinfo'
 require 'tty-cursor'
 
 virt = VirtCmd.new
+#virt = LibVirtClient.new
 
 # Clears the TTY screen
 def clear_screen
