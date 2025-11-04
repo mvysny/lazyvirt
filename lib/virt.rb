@@ -1,4 +1,4 @@
-# A virt domain (=QEMU VM).
+# A virt domain (=VM).
 #
 # - `id` {Integer | nil} - temporary ID, only available when running
 # - `name` {String} - displayable name
@@ -6,6 +6,9 @@
 class Domain < Data.define(:id, :name, :state)
   def running?
     state == :running
+  end
+  def to_s
+    "#{id || '-'}: #{name}: #{state}"
   end
 end
 
@@ -44,11 +47,14 @@ end
 # - `os_type` {String} e.g. `hvm`
 # - `state` {Symbol} one of `:running`, `:shut_off`, `:paused`, `:other`
 # - `cpus` {Integer} number of CPUs allocated
-# - `max_memory` {Integer} maximum memory allocated to a VM, in KiB. {MemStat:actual} can never be more than this.
-# - `used_memory` {Integer} Current value of {MemStat:actual}
+# - `max_memory` {Integer} maximum memory allocated to a VM, in KiB. {MemStat.actual} can never be more than this.
+# - `used_memory` {Integer} Current value of {MemStat.actual}
 # - `persistent` {Boolean}
 # - `security_model` {String} e.g. `apparmor`
 class DomainInfo < Data.define(:os_type, :state, :cpus, :max_memory, :used_memory, :persistent, :security_model)
+  def running?
+    state == :running
+  end
 end
 
 # A virt client, controls virt via the `virsh` program.
@@ -56,9 +62,9 @@ end
 class VirtCmd
   # Returns all domains, in all states.
   # @return [Array<Domain>] domains
-  def domains
-    list = `virsh list --all`.lines
-    list = list.drop(2)  # Drop the table header and underline
+  def domains(virsh_list = nil)
+    virsh_list = virsh_list || `virsh list --all`
+    list = virsh_list.lines.drop(2)  # Drop the table header and underline
     list.map!(&:strip).filter! { |it| !it.empty? }
     list.map! do |line|
       m = /(\d+|-)\s+(.+)\s+(running|shut off|paused|other)/.match line
@@ -93,8 +99,8 @@ class VirtCmd
     values = values.transform_values(&:strip)
     state = values['State'].gsub(' ', '_').to_sym
     DomainInfo.new(os_type: values['OS Type'], state: state, cpus: values['CPU(s)'].to_i,
-      max_memory: values['Max memory'].chomp(' KiB').to_i,
-      used_memory: values['Used memory'].chomp(' KiB').to_i,
+      max_memory: values['Max memory'].to_i,
+      used_memory: values['Used memory'].to_i,
       persistent: values['Persistent'] == 'yes',
       security_model: values['Security model'])
   end
