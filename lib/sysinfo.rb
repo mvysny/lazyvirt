@@ -3,7 +3,9 @@
 # @return [String] "1.0K", "23.8M", "8.0G" and such
 def format_byte_size(bytes)
   return '0' if bytes.zero?
-  units = %w[B K M G T P]
+  return '-' + format_byte_size(-bytes) if bytes.negative?
+  
+  units = ['', 'K', 'M', 'G', 'T', 'P']
 
   # Use 1024-based units (KiB, MiB, etc.)
   exp = (Math.log(bytes, 1024)).floor
@@ -18,7 +20,7 @@ def format_byte_size(bytes)
                 value.round(1)
               end
 
-  "#{formatted}#{units[exp]}"
+  "#{formatted} #{units[exp]}".strip
 end
 
 # Memory usage: `total` and `available`, in bytes, both {Integer}
@@ -27,7 +29,7 @@ class MemoryUsage < Data.define(:total, :available)
     total - available
   end
   def percent_used
-    used * 100 / total
+    total.zero? ? 0 : used * 100 / total
   end
   def to_s
     "#{format_byte_size(used)}/#{format_byte_size(total)} (#{percent_used}%)"
