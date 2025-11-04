@@ -2,29 +2,98 @@ require 'virt'
 require 'window'
 require 'sysinfo'
 require 'tty-cursor'
+require 'tty-screen'
+require 'rufus-scheduler'
+
+scheduler = Rufus::Scheduler.new
 
 virt = VirtCmd.new
 #virt = LibVirtClient.new
 
-# Clears the TTY screen
-def clear_screen
-  print TTY::Cursor.move_to(0, 0), TTY::Cursor.clear_screen
+class Formatter
+  def initialize
+    @p = Pastel.new
+  end
+  def format(what)
+    return format_cpu(what) if what.is_a? CpuInfo
+    return format_memory_stat(what) if what.is_a? MemoryStat
+    what.to_s
+  end
+  def format_cpu(cpu)
+    "#{@p.cyan.bold(cpu.model)}: #{@p.cyan(cpu.cpus)}:#{cpu.sockets}/#{cpu.cores_per_socket}/#{cpu.threads_per_core} sockets/cores/threads"
+  end
+  def format_memory_stat(ms)
+    "#{@p.bright_red('RAM')}: #{format(ms.ram)}; #{@p.bright_blue('SWAP')}: #{format(ms.swap)}"
+  end
+  def format_memory_usage(mu)
+    "#{@p.cyan(format_byte_size(mu.used))}/#{@p.cyan(format_byte_size(mu.total))} (#{@p.cyan(mu.percent_used)}%)"
+  end
 end
 
-domains = virt.domains
-
-clear_screen
-lines = []
-lines << SysInfo.new.memory_stats.to_s
-domains.each do |domain|
-  lines << domain
-  lines << virt.dominfo(domain)
-  lines << virt.memstat(domain) if domain.running?
+class SystemWindow < Window
+  # @param virt [VirtCmd | LibVirtClient]
+  def initialize(virt)
+    super('System')
+    @f = Formatter.new
+    @cpu = @f.format(virt.hostinfo)
+    update
+  end
+  
+  def update
+    content do |lines|
+      lines << @cpu
+      stats = SysInfo.new.memory_stats
+      lines << @f.format(stats)
+    end
+  end
 end
 
-w = Window.new('VMs')
-w.rect = Rect.new(4, 2, 150, 16)
-w.content = lines
+class VMWindow < Window
+  # @param virt [VirtCmd | LibVirtClient]
+  def initialize(virt)
+    super('[1]-VMs')
+    @f = Formatter.new
+    @virt = virt
+    update
+  end
+  
+  def update
+    domains = @virt.domains.sort_by(&:name)    # Array<Domain>
+    content do |lines|
+      domains.each do |domain|
+        lines << domain.to_s
+        lines << @virt.dominfo(domain)
+        lines << @virt.memstat(domain) if domain.running?
+      end
+    end
+  end
+end
+
+class Screen
+  def initialize(virt)
+    @f = Formatter.new
+    @virt = virt
+    @system = SystemWindow.new(virt)
+    @vms = VMWindow.new(virt)
+  end
+  
+  # Clears the TTY screen
+  def clear_screen
+    print TTY::Cursor.move_to(0, 0), TTY::Cursor.clear_screen
+  end
+  
+  def paint
+    clear_screen
+    sh, sw = TTY::Screen.size
+    left_pane_w = sw / 2
+    @system.rect = Rect.new(0, 0, left_pane_w, 4)
+    @vms.rect = Rect.new(0, 4, left_pane_w, 10)
+  end
+end
+
+screen = Screen.new(virt)
+screen.paint
+
 
 sleep 1
 
