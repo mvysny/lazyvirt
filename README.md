@@ -1,6 +1,6 @@
 # LazyVirt
 
-A TUI client for virt. Under development. Requires Ruby 3.3+. Currently runs `virsh`.
+A TUI client for libvirt/virsh. Under development. Requires Ruby 3.3+. Currently runs `virsh`.
 Currently only tested on Linux host: probably won't work on Windows nor MacOS.
 
 ## Setup
@@ -19,6 +19,7 @@ $ bundle exec rake test
 If `bundle install` fails, try running `bundle config set --global path '~/.gem'`.
 
 - To use lazyvirt over `virsh` binary, run `sudo apt install libvirt-clients`
+  - Direct connection to `libvirt` is unsupported at the moment, but will be included for sure.
 - To give your user control over virtual machines, add your user to `libvirt` group:
   `sudo usermod -aG libvirt $USER` and log out/log in.
 - To setup VMs, install `sudo apt install virt-manager`
