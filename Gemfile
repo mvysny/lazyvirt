@@ -6,6 +6,8 @@ ruby '>= 3.3'
 gem 'pastel'
 gem 'tty-box', '~> 0.7.0'
 gem 'tty-cursor', '~> 0.7.1'
+gem 'tty-screen'
+gem 'rufus-scheduler'
 
 group :development do
   gem 'rake', '~> 13.2'
