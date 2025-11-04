@@ -1,9 +1,11 @@
 require_relative 'virt'
 require_relative 'window'
+require_relative 'sysinfo'
 require 'tty-cursor'
 
 virt = VirtCmd.new
 
+# Clears the TTY screen
 def clear_screen
   print TTY::Cursor.move_to(0, 0), TTY::Cursor.clear_screen
 end
@@ -12,6 +14,7 @@ domains = virt.domains
 
 clear_screen
 lines = []
+lines << SysInfo.new.memory_stats.to_s
 domains.each do |domain|
   lines << domain
   lines << virt.dominfo(domain)
