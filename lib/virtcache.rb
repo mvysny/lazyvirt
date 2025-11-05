@@ -40,9 +40,9 @@ class VirtCache
 
   # Returns the CPU usage of a VM.
   # @param domain [DomainId]
-  # @return [Float] CPU usage 0..100%, 100%=full usage of all host CPU cores.
+  # @return [Float] CPU usage 0..100%, 100%=full usage of all guest CPU cores.
   def cpu_usage(domain)
-    @guest_cpu[domain] || 0.0
+    (@guest_cpu[domain] || 0.0) / @domain_data[domain].info.cpus
   end
 
   # Updates the cache
@@ -52,7 +52,7 @@ class VirtCache
     @domain_data = @virt.domain_data
     @domain_data = @domain_data.map { |domain_name, data| [DomainId.new(data.running? ? domain_name.hash : nil, domain_name), data] }.to_h
     # guest CPU
-    @guest_cpu = @domain_data.map { |did, data| [did, data.cpu_usage(old_domain_data[did]) / @cpu_count] } .to_h
+    @guest_cpu = @domain_data.map { |did, data| [did, data.cpu_usage(old_domain_data[did])] } .to_h
     
     # host stats
     @host_mem_stat = @sysinfo.memory_stats
@@ -67,7 +67,7 @@ class VirtCache
   # Sum of all CPU usages of all VMs.
   # @return [Float] CPU usage 0..100%, 100%=full usage of all host CPU cores.
   def total_vm_cpu_usage
-    @guest_cpu.values.sum
+    @guest_cpu.values.sum { |it| it / @cpu_count }
   end
 
   # @return [Float] recent CPU usage, 0..100%

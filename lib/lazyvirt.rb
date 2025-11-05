@@ -61,10 +61,15 @@ class VMWindow < Window
         line += " #{@f.format_domain_state(state)}"
         if domain_id.running?
           memstat = @virt_cache.memstat(domain_id)
-          line += " #{@f.format(memstat)}"
-          line += " CPU: #{@virt_cache.cpu_usage(domain_id).round(2)}%"
+          line += "   #{$p.bright_red('host RSS MEM')}: #{@f.format(memstat.host_mem)}"
         end
         lines << line
+        if domain_id.running?
+          cpu_usage = @virt_cache.cpu_usage(domain_id).round(2)
+          guest_mem_usage = @virt_cache.memstat(domain_id).guest_mem
+          lines << "   #{$p.bright_blue('Guest CPU')}: [#{@f.progress_bar(20, 100, { cpu_usage.to_i => :bright_blue })}] #{$p.bright_blue(cpu_usage)}%"
+          lines << "   #{$p.bright_red('Guest RAM')}: [#{@f.progress_bar(20, guest_mem_usage.total, { guest_mem_usage.used => :bright_red })}] #{@f.format(guest_mem_usage)}" unless guest_mem_usage.nil?
+        end
       end
     end
   end
@@ -91,7 +96,7 @@ class Screen
     _, sw = TTY::Screen.size
     left_pane_w = sw / 2
     @system.rect = Rect.new(0, 0, left_pane_w, 6)
-    @vms.rect = Rect.new(0, 6, left_pane_w, 10)
+    @vms.rect = Rect.new(0, 6, left_pane_w, 14)
   end
 
   def update_data
@@ -109,7 +114,7 @@ trap('WINCH') do
 end
 
 # https://github.com/jmettraux/rufus-scheduler
-scheduler.every '3s' do
+scheduler.every '2s' do
   begin
     virt_cache.update
     screen.update_data
