@@ -97,4 +97,13 @@ class TestVirt < Minitest::Test
                  result['ubuntu'].to_s
     assert_equal ': shut_off; CPUs: 4; configured mem: 8 G/8 G (100%), 8 G(rss=0)', result['win11'].to_s
   end
+
+  def test_domain_data_cpu_usage
+    millis_since_epoch = 1762378459933
+    result0 = VirtCmd.new.domain_data(File.read('test/domstats0.txt'), millis_since_epoch)['ubuntu']
+    result1 = VirtCmd.new.domain_data(File.read('test/domstats1.txt'), millis_since_epoch + 10 * 1000)['ubuntu']
+    assert_equal 22.51, result1.cpu_usage(result0).round(2)
+    result2 = VirtCmd.new.domain_data(File.read('test/domstats2.txt'), millis_since_epoch + 20 * 1000)['ubuntu']
+    assert_equal 181.43, result2.cpu_usage(result1).round(2)
+  end
 end

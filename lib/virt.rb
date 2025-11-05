@@ -127,7 +127,7 @@ class DomainData < Data.define(:info, :sampled_at, :cpu_time, :mem_stat)
 
     time_passed_millis = sampled_at - older_data.sampled_at
     cpu_used_millis = cpu_time - older_data.cpu_time
-    time_passed_millis.to_f / cpu_used_millis
+    cpu_used_millis.to_f / time_passed_millis * 100
   end
 
   def to_s
