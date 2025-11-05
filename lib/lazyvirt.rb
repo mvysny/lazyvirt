@@ -27,12 +27,18 @@ class SystemWindow < Window
 
   def update
     content do |lines|
+      # CPU
       lines << @cpu
+      host_cpu_usage = @virt_cache.host_cpu_usage.to_i
+      lines << "     [#{@f.progress_bar(20, 100, { host_cpu_usage => :bright_blue })}]"
       lines << @f.format(@virt_cache.host_mem_stat)
+
+      # Memory
       total_ram = @virt_cache.host_mem_stat.ram.total
       total_vm_rss_usage = @virt_cache.total_vm_rss_usage
       ram_use = { total_vm_rss_usage => :magenta, @virt_cache.host_mem_stat.ram.used => :bright_red }
-      lines << "     [#{@f.progress_bar(20, total_ram, ram_use)}]  #{$p.magenta(format_byte_size(total_vm_rss_usage))} used by VMs"
+      lines << "     [#{@f.progress_bar(20, total_ram,
+                                        ram_use)}]  #{$p.magenta(format_byte_size(total_vm_rss_usage))} used by VMs"
     end
   end
 end
@@ -81,8 +87,8 @@ class Screen
     clear
     _, sw = TTY::Screen.size
     left_pane_w = sw / 2
-    @system.rect = Rect.new(0, 0, left_pane_w, 5)
-    @vms.rect = Rect.new(0, 5, left_pane_w, 10)
+    @system.rect = Rect.new(0, 0, left_pane_w, 6)
+    @vms.rect = Rect.new(0, 6, left_pane_w, 10)
   end
 
   def update_data
