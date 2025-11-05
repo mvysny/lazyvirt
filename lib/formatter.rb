@@ -54,4 +54,30 @@ class Formatter
     result += " Guest:#{format(mem_stat.guest_mem)}" unless mem_stat.guest_mem.nil?
     result
   end
+
+  # Draws pretty progress bar as one row. Supports paiting multiple values into the same row.
+  # @param width the width of the progress bar, in characters. The height is always 1.
+  # @param max_value [Integer] the max value
+  # @param values [Hash{Integer => Symbol}] maps value to the Pastel color to draw with, e.g. `:red` or `:bright_yellow`.
+  # @return [String] Pastel progress bar
+  def progress_bar(width, max_value, values, char = '#')
+    raise '#{max_value} must not be negative' if max_value.negative?
+    return '' if max_value.zero? || width.zero?
+    return ' ' * width if values.empty?
+
+    vals = values.keys.sort
+    result = ''
+    length = 0
+    vals.each do |value|
+      next if value <= 0
+
+      progressbar_char_length = value.clamp(0, max_value) * width / max_value
+      next unless length < progressbar_char_length
+
+      chars = char * (progressbar_char_length - length)
+      length = progressbar_char_length
+      result += @p.lookup(values[value]) + chars
+    end
+    result + ' ' * (width - length) + (length > 0 ? @p.lookup(:reset) : '')
+  end
 end
