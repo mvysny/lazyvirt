@@ -62,6 +62,11 @@ class MemStat < Data.define(:actual, :unused, :available, :usable, :disk_caches,
     guest_data_available? ? MemoryUsage.new(available, usable) : nil
   end
   
+  # @return [MemoryUsage] the host memory stat: `rss` of `actual`
+  def host_mem
+    MemoryUsage.new(actual, actual - rss)
+  end
+  
   # Returns true if the guest memory data is available. false if the VM doesn't report guest data,
   # probably because ballooning service isn't running, or virt guest tools aren't installed,
   # or the VM lacks the ballooning device.
