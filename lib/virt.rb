@@ -129,6 +129,10 @@ class DomainData < Data.define(:info, :sampled_at, :cpu_time, :mem_stat)
     cpu_used_millis = cpu_time - older_data.cpu_time
     time_passed_millis.to_f / cpu_used_millis
   end
+
+  def to_s
+    "#{info}, #{mem_stat}"
+  end
 end
 
 # Info about host CPU:
@@ -155,7 +159,7 @@ class VirtCmd
   # Returns all available domain data.
   # @param domstats_file [String] outcome of `virsh domstats`, for testing only.
   # @param sampled_at [Integer] millis since epoch, for testing only.
-  # @return [Hash<DomainId => DomainData>] domain data
+  # @return [Hash<String => DomainData>] domain data
   def domain_data(domstats_file = nil, sampled_at = nil)
     domstats_file ||= `virsh domstats`
     sampled_at ||= DateTime.now.strftime('%Q')
@@ -182,7 +186,6 @@ class VirtCmd
     result = {}
     data.each do |domain, values|
       state = @states[values['state.state'].to_i] || :other
-      did = DomainId.new(state == :running ? domain.hash : nil, domain)
       mem_current = values['balloon.current'].to_i * 1024
       domain_info = DomainInfo.new(nil, state, values['vcpu.maximum'].to_i,
                                    values['balloon.maximum'].to_i * 1024, mem_current)
@@ -196,7 +199,7 @@ class VirtCmd
         values['balloon.rss'].to_i * 1024
       )
       ddata = DomainData.new(domain_info, sampled_at, cpu_time, mem_stat)
-      result[did] = ddata
+      result[domain] = ddata
     end
     result
   end
