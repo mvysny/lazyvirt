@@ -47,11 +47,11 @@ class VirtCache
   # Updates the cache
   def update
     # guest stats
-    domain_data = @virt.domain_data
-    domain_data = domain_data.map { |domain_name, data| [DomainId.new(data.running? ? domain_name.hash : nil, domain_name), data] }.to_h
+    old_domain_data = @domain_data
+    @domain_data = @virt.domain_data
+    @domain_data = @domain_data.map { |domain_name, data| [DomainId.new(data.running? ? domain_name.hash : nil, domain_name), data] }.to_h
     # guest CPU
-    @guest_cpu = domain_data.map { |did, data| [did, data.cpu_usage(@domain_data[did]) / @cpu_count] } .to_h
-    @domain_data = domain_data
+    @guest_cpu = @domain_data.map { |did, data| [did, data.cpu_usage(old_domain_data[did]) / @cpu_count] } .to_h
     
     # host stats
     @host_mem_stat = @sysinfo.memory_stats

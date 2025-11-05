@@ -166,7 +166,7 @@ class VirtCmd
   # @return [Hash<String => DomainData>] domain data
   def domain_data(domstats_file = nil, sampled_at = nil)
     domstats_file ||= `virsh domstats`
-    sampled_at ||= DateTime.now.strftime('%Q')
+    sampled_at ||= DateTime.now.strftime('%Q').to_i
 
     # grab data
     data = {}
