@@ -26,11 +26,11 @@ class Formatter
   end
   # @param cpu [CpuInfo]
   def format_cpu(cpu)
-    "#{@p.cyan.bold(cpu.model)}: #{@p.cyan(cpu.cpus)}:#{cpu.sockets}/#{cpu.cores_per_socket}/#{cpu.threads_per_core} sockets/cores/threads"
+    "#{@p.bright_blue('CPU')}: #{@p.bright_blue(cpu.model)}: #{@p.cyan(cpu.cpus)}:#{cpu.sockets}/#{cpu.cores_per_socket}/#{cpu.threads_per_core} sockets/cores/threads"
   end
   # @param ms [MemoryStat]
   def format_memory_stat(ms)
-    "#{@p.bright_red('RAM')}: #{format(ms.ram)}; #{@p.bright_blue('SWAP')}: #{format(ms.swap)}"
+    "#{@p.bright_red('RAM')}: #{format(ms.ram)}; #{@p.bright_red('SWAP')}: #{format(ms.swap)}"
   end
   # @param mu [MemoryUsage]
   def format_memory_usage(mu)
