@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative 'sysinfo'
 require_relative 'virt'
 
@@ -7,7 +9,7 @@ class VirtCache
   attr_reader :host_mem_stat
   # @property [CpuInfo]
   attr_reader :cpu_info
-  
+
   # @param virt [VirtCmd | LibVirtClient] virt client
   def initialize(virt)
     @virt = virt
@@ -23,13 +25,13 @@ class VirtCache
   def domains
     @domains.keys
   end
-  
+
   # @param domain [DomainId]
   # @return [MemStat | nil] nil if domain isn't running
   def memstat(domain)
     @mem_stats[domain]
   end
-  
+
   # @param domain [DomainId]
   # @return [Symbol] one of `:running`, `:shut_off`, `:paused`, `:other`
   def state(domain)
@@ -39,14 +41,13 @@ class VirtCache
   # Updates the cache
   def update
     domains = @virt.domains
-    @domains = domains.map { |d| [d.id, d.state] } .to_h
-    @mem_stats = @domains.keys.map { |id| [id, id.running? ? @virt.memstat(id) : nil] } .to_h
+    @domains = domains.map { |d| [d.id, d.state] }.to_h
+    @mem_stats = @domains.keys.map { |id| [id, id.running? ? @virt.memstat(id) : nil] }.to_h
     @host_mem_stat = SysInfo.new.memory_stats
   end
-  
+
   # @return [Integer] a sum of RSS usage of all running VMs
   def total_vm_rss_usage
     @mem_stats.values.sum { |mem_stat| mem_stat&.rss || 0 }
   end
 end
-
