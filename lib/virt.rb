@@ -95,9 +95,7 @@ end
 # - `cpus` {Integer} number of CPUs allocated
 # - `max_memory` {Integer} maximum memory allocated to a VM, in bytes. {MemStat.actual} can never be more than this.
 # - `used_memory` {Integer} Current value of {MemStat.actual}, in bytes.
-# - `persistent` {Boolean}
-# - `security_model` {String} e.g. `apparmor`
-class DomainInfo < Data.define(:os_type, :state, :cpus, :max_memory, :used_memory, :persistent, :security_model)
+class DomainInfo < Data.define(:os_type, :state, :cpus, :max_memory, :used_memory)
   def running?
     state == :running
   end
@@ -107,7 +105,7 @@ class DomainInfo < Data.define(:os_type, :state, :cpus, :max_memory, :used_memor
   end
 
   def to_s
-    "#{os_type}: #{state}; CPUs: #{cpus}; configured mem: #{configured_memory}; persistent=#{persistent}; security_model=#{security_model}"
+    "#{os_type}: #{state}; CPUs: #{cpus}; configured mem: #{configured_memory}"
   end
 end
 
@@ -172,9 +170,7 @@ class VirtCmd
     state = values['State'].gsub(' ', '_').to_sym
     DomainInfo.new(os_type: values['OS Type'], state: state, cpus: values['CPU(s)'].to_i,
                    max_memory: values['Max memory'].to_i * 1024,
-                   used_memory: values['Used memory'].to_i * 1024,
-                   persistent: values['Persistent'] == 'yes',
-                   security_model: values['Security model'])
+                   used_memory: values['Used memory'].to_i * 1024)
   end
 
   # @return [Boolean] whether this virt client is available
@@ -275,8 +271,6 @@ class LibVirtClient
     info = d.info
     DomainInfo.new(os_type: nil, state: @states[info.state] || :other, cpus: info.nr_virt_cpu,
                    max_memory: info.max_mem * 1024,
-                   used_memory: info.memory * 1024,
-                   persistent: nil,
-                   security_model: nil)
+                   used_memory: info.memory * 1024)
   end
 end
