@@ -22,9 +22,7 @@ class Formatter
 
   # @param cpu [CpuInfo]
   def format_cpu(cpu)
-    r = "#{@p.bright_blue('CPU')}: #{@p.bright_blue(cpu.model)}: "
-    r += "#{@p.cyan(cpu.cpus)}:#{cpu.sockets}/#{cpu.cores_per_socket}/#{cpu.threads_per_core} sockets/cores/threads"
-    r
+    "#{@p.bright_blue('CPU')}: #{@p.bright_blue(cpu.model)}: #{@p.cyan(cpu.cpus)} cores"
   end
 
   # @param memory_stat [MemoryStat]
