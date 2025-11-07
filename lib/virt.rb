@@ -101,6 +101,7 @@ end
 class DiskStat < Data.define(:name, :allocation, :capacity, :physical)
   # @return [Float] how much data is allocated vs the max capacity. 0..100
   def percent_used
+    return 0.0 if capacity.zero?
     (allocation.to_f / capacity * 100).clamp(0.0, 100.0).round(2)
   end
 
