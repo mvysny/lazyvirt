@@ -79,7 +79,7 @@ class VMWindow < Window
           end
         end
         data.disk_stat.each do |ds|
-          lines << "    #{ds}"
+          lines << "    " + @f.format(ds)
         end
       end
     end

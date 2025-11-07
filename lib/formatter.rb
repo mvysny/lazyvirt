@@ -12,12 +12,20 @@ class Formatter
   # @param what the object to format
   # @return [String] a Pastel-formatted object
   def format(what)
-    return format_cpu(what) if what.is_a? CpuInfo
-    return format_memory_stat(what) if what.is_a? MemoryStat
-    return format_mem_stat(what) if what.is_a? MemStat
-    return format_memory_usage(what) if what.is_a? MemoryUsage
-
-    what.to_s # Fallback to :to_s
+    case what
+      when CpuInfo
+        format_cpu(what)
+      when MemoryStat
+        format_memory_stat(what)
+      when MemStat
+        format_mem_stat(what)
+      when MemoryUsage
+        format_memory_usage(what)
+      when DiskStat
+        format_disk_stat(what)
+      else
+        what.to_s
+    end
   end
 
   # @param cpu [CpuInfo]
@@ -56,6 +64,23 @@ class Formatter
     result = "Host:#{format(mem_stat.host_mem)}"
     result += " Guest:#{format(mem_stat.guest_mem)}" unless mem_stat.guest_mem.nil?
     result
+  end
+  
+  # @param disk_stat [DiskStat]
+  def format_disk_stat(disk_stat)
+    line = "#{disk_stat.name}: [#{progress_bar(20, 100, [[disk_stat.percent_used.to_i, :white]])}]"
+    overhead = disk_stat.overhead_percent
+    overhead_color = case overhead
+      when ..10
+        :bright_green
+      when 10..20
+        :bright_yellow
+      else
+        :bright_red
+    end
+    line += " #{@p.bright_white(format_byte_size(disk_stat.allocation))}/#{@p.bright_white(format_byte_size(disk_stat.capacity))}"
+    line += ", host qcow2 #{@p.lookup(overhead_color)}#{overhead}#{@p.lookup(:reset)}%"
+    line
   end
 
   # Draws pretty progress bar as one row. Supports paiting multiple values into the same row.
