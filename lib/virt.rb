@@ -92,6 +92,29 @@ class MemStat < Data.define(:actual, :unused, :available, :usable, :disk_caches,
   end
 end
 
+# A VM disk statistics.
+#
+# - `name` {String} the name of the device, e.g. `vda` or `sda`
+# - `allocation` {Integer} how much of the guest’s disk has real data behind it
+# - `capacity` {Integer} maximum size of the guest disk
+# - `physical` {Integer} how big the qcow2 file actually is on host's filesystem right now
+class DiskStat < Data.define(:name, :allocation, :capacity, :physical)
+  # @return [Float] how much data is allocated vs the max capacity. 0..100
+  def percent_used
+    (allocation.to_f / capacity * 100).clamp(0.0, 100.0).round(2)
+  end
+
+  # @return [Float] how much bigger `physical` (host storage size) is, compared to `allocation` (guest-stored data).
+  # 0 if `physical` == `allocation`; may be less than zero if `physical` is smaller (e.g. due compression).
+  def overhead_percent
+    (((physical.to_f / allocation) - 1) * 100).round(2)
+  end
+
+  def to_s
+    "#{name}: #{format_byte_size(allocation)}/#{format_byte_size(capacity)} (#{percent_used}%); physical #{format_byte_size(physical)} (#{overhead_percent}% overhead)"
+  end
+end
+
 # VM information
 #
 # - `os_type` {String} e.g. `hvm`

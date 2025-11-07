@@ -109,3 +109,12 @@ class TestVirt < Minitest::Test
     assert_equal 181.43, result2.cpu_usage(result1).round(2)
   end
 end
+
+class TestDiskStat < Minitest::Test
+  def test_to_s
+    ds = DiskStat.new('vda', 20_348_669_952, 68_719_476_736, 20_452_605_952)
+    assert_equal 'vda: 19 G/64 G (29.61%); physical 19 G (0.51% overhead)', ds.to_s
+    ds = DiskStat.new('sda', 18_022_993_920, 137_438_953_472, 23_508_287_488)
+    assert_equal 'sda: 17 G/128 G (13.11%); physical 22 G (30.43% overhead)', ds.to_s
+  end
+end
