@@ -142,7 +142,8 @@ end
 # - `sampled_at` {Integer} milliseconds since the epoch
 # - `cpu_time` {Integer} milliseconds of used CPU time (user + system)
 # - `mem_stat` {MemStat} memory stats, nil if not running.
-class DomainData < Data.define(:info, :sampled_at, :cpu_time, :mem_stat)
+# - `disk_stat` {Array<DiskStat>} disk stats, one per every connected disk
+class DomainData < Data.define(:info, :sampled_at, :cpu_time, :mem_stat, :disk_stat)
   def state
     info.state
   end
@@ -233,10 +234,25 @@ class VirtCmd
       mem_stat = MemStat.new(mem_current, mem_unused, mem_available, mem_usable,
                              values['balloon.disk_caches']&.to_i&.*(1024),
                              values['balloon.rss'].to_i * 1024)
-      ddata = DomainData.new(domain_info, sampled_at, cpu_time, mem_stat)
+
+      disk_stat = parse_disk_data(values)
+      ddata = DomainData.new(domain_info, sampled_at, cpu_time, mem_stat, disk_stat)
       result[domain] = ddata
     end
     result
+  end
+
+  # @param data [Hash{String => String}] contains info e.g. `block.0.capacity=1231`
+  # @return [Array<DiskStat>] parsed stats
+  private def parse_disk_data(data)
+    count = data['block.count'].to_i
+    (0...count).map do |block_index|
+      name = data["block.#{block_index}.name"]
+      allocation = data["block.#{block_index}.allocation"].to_i
+      capacity = data["block.#{block_index}.capacity"].to_i
+      physical = data["block.#{block_index}.physical"].to_i
+      DiskStat.new(name, allocation, capacity, physical)
+    end
   end
 
   # Returns all domains, in all states.
@@ -329,8 +345,8 @@ class LibVirtClient
   def close
     @conn.close
   end
-  
-  # TODO need to implement domain_data function, but libvirt-ruby doesn't have it atm:
+
+  # TODO: need to implement domain_data function, but libvirt-ruby doesn't have it atm:
   # https://gitlab.com/libvirt/libvirt-ruby/-/issues/14
 
   # Returns all domains, in all states.

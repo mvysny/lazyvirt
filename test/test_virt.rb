@@ -98,6 +98,8 @@ class TestVirt < Minitest::Test
     assert_equal ': running; CPUs: 8; configured mem: 12 G/12 G (100%), 12 G(rss=3.4 G); guest: 241 M/11 G (2%) (unused=11 G, disk_caches=37 M)',
                  result['ubuntu'].to_s
     assert_equal ': shut_off; CPUs: 4; configured mem: 8 G/8 G (100%), 8 G(rss=0)', result['win11'].to_s
+    assert_equal 'sda: 18 G/128 G (13.99%); physical 18 G (2.88% overhead)', result['win11'].disk_stat.join(',')
+    assert_equal 'vda: 23 G/64 G (36.02%); physical 25 G (9.31% overhead)', result['ubuntu'].disk_stat.join(',')
   end
 
   def test_domain_data_cpu_usage
