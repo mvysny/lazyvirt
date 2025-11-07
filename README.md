@@ -17,8 +17,8 @@ $ bundle install
 
 If `bundle install` fails, try running `bundle config set --global path '~/.gem'`.
 
-- To use direct connection to `libvirt` (recommended), install the libvirt Ruby gem: `sudo apt install ruby-libvirt`
-- To use lazyvirt over `virsh` binary, run `sudo apt install libvirt-clients`
+- To use lazyvirt over `virsh` binary, run `sudo apt install libvirt-clients` (recommended)
+- To use direct connection to `libvirt` (experimental, broken at the moment), install the libvirt Ruby gem: `sudo apt install ruby-libvirt`
 - To give your user control over virtual machines, add your user to `libvirt` group:
   `sudo usermod -aG libvirt $USER` and log out/log in.
 - To setup VMs, install `sudo apt install virt-manager`
