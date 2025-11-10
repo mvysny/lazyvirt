@@ -47,10 +47,10 @@ class Formatter
 
   # @param state [Symbol] one of `:running`, `:shut_off`, `:paused`
   def format_domain_state(state)
-    running = "\u{1F7E2}"        # 🟢 LARGE GREEN CIRCLE
-    paused = "\u{1F7E1}"        # 🟡
-    off    = "\u{1F534}"        # 🔴
-    unknown = "\u{26AA}"        # ⚪ MEDIUM WHITE CIRCLE
+    running = @p.green("\u{25B6}")
+    paused = @p.yellow("\u{23F8}")
+    off    = @p.dim.red("\u{23F9}")
+    unknown = @p.red("?")
     case state
       when :running then running
       when :shut_off then off
