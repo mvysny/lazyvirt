@@ -117,34 +117,26 @@ class DiskStat < Data.define(:name, :allocation, :capacity, :physical)
   end
 end
 
-# VM information
+# VM information that is static and doesn't generally change unless the VM is shut down.
 #
-# - `state` {Symbol} one of `:running`, `:shut_off`, `:paused`, `:other`
 # - `cpus` {Integer} number of CPUs allocated
 # - `max_memory` {Integer} maximum memory allocated to a VM, in bytes. {MemStat.actual} can never be more than this.
-class DomainInfo < Data.define(:state, :cpus, :max_memory)
-  def running?
-    state == :running
-  end
-
+class DomainInfo < Data.define(:name, :cpus, :max_memory)
   def to_s
-    "#{state}, CPUs: #{cpus}, RAM: #{format_byte_size(max_memory)}"
+    "#{name}: CPUs: #{cpus}, RAM: #{format_byte_size(max_memory)}"
   end
 end
 
 # A VM information
 #
 # - `info` {DomainInfo} info
+# - `state` {Symbol} one of `:running`, `:shut_off`, `:paused`, `:other`
 # - `sampled_at` {Integer} milliseconds since the epoch; you can use [:millis_now]
 # - `cpu_time` {Integer} milliseconds of used CPU time (user + system) since last sampling.
 #   Used to calculate CPU usage.
 # - `mem_stat` {MemStat} memory stats, nil if not running.
 # - `disk_stat` {Array<DiskStat>} disk stats, one per every connected disk
-class DomainData < Data.define(:info, :sampled_at, :cpu_time, :mem_stat, :disk_stat)
-  def state
-    info.state
-  end
-
+class DomainData < Data.define(:info, :state, :sampled_at, :cpu_time, :mem_stat, :disk_stat)
   def running?
     state == :running
   end
@@ -171,7 +163,7 @@ class DomainData < Data.define(:info, :sampled_at, :cpu_time, :mem_stat, :disk_s
   end
 
   def to_s
-    "#{info}; #{mem_stat}"
+    "#{info}; #{state}; #{mem_stat}"
   end
 end
 
@@ -204,9 +196,10 @@ class VirtCmd
     domstats_file ||= `virsh domstats`
     sampled_at ||= DomainData.millis_now
 
-    # grab data
+    # grab data. Hash{String => current_values}
     data = {}
     current_domain = ''
+    # Hash{String => String}
     current_values = {}
     domstats_file.lines.each do |line|
       line = line.strip
@@ -227,7 +220,7 @@ class VirtCmd
     data.each do |domain, values|
       state = @states[values['state.state'].to_i] || :other
       mem_current = values['balloon.current'].to_i * 1024
-      domain_info = DomainInfo.new(state, values['vcpu.maximum'].to_i,
+      domain_info = DomainInfo.new(domain, values['vcpu.maximum'].to_i,
                                    values['balloon.maximum'].to_i * 1024)
       cpu_time = values['cpu.time'].to_i / 1_000_000
       mem_unused = values['balloon.unused']&.to_i&.*(1024)
@@ -238,7 +231,7 @@ class VirtCmd
                              values['balloon.rss'].to_i * 1024)
 
       disk_stat = parse_disk_data(values)
-      ddata = DomainData.new(domain_info, sampled_at, cpu_time, mem_stat, disk_stat)
+      ddata = DomainData.new(domain_info, state, sampled_at, cpu_time, mem_stat, disk_stat)
       result[domain] = ddata
     end
     result
@@ -369,10 +362,14 @@ end
 # Produces random data
 class FakeVirtClient
   def initialize
-    @vms = { 'BASE' => FakeVirtClient.random_vm_info(:shut_off),
-             'Ubuntu' => FakeVirtClient.random_vm_info(:running),
-             'win11' => FakeVirtClient.random_vm_info(:running),
-             'Fedora' => FakeVirtClient.random_vm_info(:paused) }
+    @vms = { 'BASE' => FakeVirtClient.random_vm_info('BASE'),
+             'Ubuntu' => FakeVirtClient.random_vm_info('Ubuntu'),
+             'win11' => FakeVirtClient.random_vm_info('win11'),
+             'Fedora' => FakeVirtClient.random_vm_info('Fedora') }
+    @vm_state = { 'BASE' => :shut_off,
+                  'Ubuntu' => :running,
+                  'win11' => :running,
+                  'Fedora' => :paused }
     # Maps {String} name to {DomainData}.
     @last_domain_data = {}
   end
@@ -393,12 +390,13 @@ class FakeVirtClient
     time_diff_millis = @last_sampled_at.nil? ? nil : sampled_at - @last_sampled_at
     result = {}
     @vms.each do |name, info|
+      state = @vm_state[name]
       prev_info = @last_domain_data[name]
       cpu_usage = rand * info.cpus
       cpu_time = prev_info.nil? ? 0.0 : prev_info.cpu_time + time_diff_millis * cpu_usage
-      mem_stat = FakeVirtClient.random_mem_stat(info)
+      mem_stat = FakeVirtClient.random_mem_stat(info, state)
       disk_stat = [FakeVirtClient.random_disk_stat(name)]
-      result[name] = DomainData.new(info, sampled_at, cpu_time, mem_stat, disk_stat)
+      result[name] = DomainData.new(info, state, sampled_at, cpu_time, mem_stat, disk_stat)
     end
     @last_sampled_at = sampled_at
     @last_domain_data = result
@@ -407,18 +405,18 @@ class FakeVirtClient
 
   private
 
-  # @param state [Symbol]
+  # @param name [String]
   # @return [DomainInfo]
-  def self.random_vm_info(state)
-    DomainInfo.new(state, rand(1..4), rand(1024 * 1024 * 1024..20 * 1024 * 1024 * 1024))
+  def self.random_vm_info(name)
+    DomainInfo.new(name, rand(1..4), rand(1024 * 1024 * 1024..20 * 1024 * 1024 * 1024))
   end
 
   # @param info [DomainInfo]
   # @return [MemStat]
-  def self.random_mem_stat(info)
+  def self.random_mem_stat(info, state)
     actual = ((rand / 2 + 0.5) * info.max_memory).to_i
     rss = actual
-    if info.running?
+    if state == :running
       available = (actual * 0.9).to_i
       disk_caches = (available * 0.3).to_i
       usable = (available * 0.4).to_i
