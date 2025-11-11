@@ -258,53 +258,6 @@ class VirtCmd
     result
   end
 
-  # Returns all domains, in all states.
-  # @param virsh_list [String | nil] Output of `virsh list --all`, for testing only
-  # @return [Array<Domain>] domains
-  def domains(virsh_list = nil)
-    virsh_list ||= `virsh list --all`
-    list = virsh_list.lines.drop(2) # Drop the table header and underline
-    list.map!(&:strip).filter! { |it| !it.empty? }
-    list.map! do |line|
-      m = /(\d+|-)\s+(.+)\s+(running|shut off|paused|other)/.match line
-      raise "Unparsable line: #{line}" if m.nil?
-
-      id = m[1] == '-' ? nil : m[1].to_i
-      state = m[3].gsub(' ', '_').to_sym
-      Domain.new(DomainId.new(id, m[2].strip), state)
-    end
-    list
-  end
-
-  # Runtime memory stats. Only available when the VM is running.
-  #
-  # @param domain [DomainId] domain
-  # @param virsh_dommemstat [String | nil] output of `virsh dommemstat`, for testing only
-  # @return [MemStat]
-  def memstat(domain, virsh_dommemstat = nil)
-    virsh_dommemstat ||= `virsh dommemstat #{domain.id}`
-    values = virsh_dommemstat.lines.filter { |it| !it.strip.empty? }.map { |it| it.strip.split }.to_h
-    MemStat.new(actual: values['actual'].to_i * 1024, unused: values['unused']&.to_i&.*(1024),
-                available: values['available']&.to_i&.*(1024), usable: values['usable']&.to_i&.*(1024),
-                disk_caches: values['disk_caches']&.to_i&.*(1024), rss: values['rss'].to_i * 1024)
-  end
-
-  # Domain (VM) information. Also available when VM is shut off.
-  #
-  # @param domain [DomainId] domain
-  # @param virsh_dominfo [String | nil] output of `virsh dominfo`, for testing only
-  # @return [DomainInfo]
-  def dominfo(domain, virsh_dominfo = nil)
-    did = domain.id || domain.name
-    virsh_dominfo ||= `virsh dominfo "#{did}"`
-    values = virsh_dominfo.lines.filter { |it| !it.strip.empty? }.map { |it| it.split ':' }.to_h
-    values = values.transform_values(&:strip)
-    state = values['State'].gsub(' ', '_').to_sym
-    DomainInfo.new(os_type: values['OS Type'], state: state, cpus: values['CPU(s)'].to_i,
-                   max_memory: values['Max memory'].to_i * 1024,
-                   used_memory: values['Used memory'].to_i * 1024)
-  end
-
   # @return [Boolean] whether this virt client is available
   def self.available?
     !`which virsh`.strip.empty?
