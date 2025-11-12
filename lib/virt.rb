@@ -149,7 +149,9 @@ class DomainData < Data.define(:info, :state, :sampled_at, :cpu_time, :mem_stat,
   end
 
   def to_s
-    "#{info}; #{state}; #{mem_stat}"
+    result = "#{info}; #{state}"
+    result += "; #{mem_stat}" unless mem_stat.nil?
+    result
   end
 end
 

@@ -25,7 +25,7 @@ class TestVirt < Minitest::Test
     assert_equal 2, result.size
     assert_equal 'ubuntu: CPUs: 8, RAM: 12G; running; actual 12G(rss=3.4G); guest: 241M/11G (2%) (unused=11G, disk_caches=37M)',
                  result['ubuntu'].to_s
-    assert_equal 'win11: CPUs: 4, RAM: 8G; shut_off; actual 8G(rss=0)', result['win11'].to_s
+    assert_equal 'win11: CPUs: 4, RAM: 8G; shut_off', result['win11'].to_s
     assert_equal 'sda: 18G/128G (13.99%); physical 18G (2.88% overhead)', result['win11'].disk_stat.join(',')
     assert_equal 'vda: 23G/64G (36.02%); physical 25G (9.31% overhead)', result['ubuntu'].disk_stat.join(',')
   end
