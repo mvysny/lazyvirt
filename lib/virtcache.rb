@@ -29,7 +29,7 @@ class VirtCache
   # @param domain [DomainId]
   # @return [MemStat | nil] nil if domain isn't running
   def memstat(domain)
-    data(domain).mem_stat
+    data(domain)&.mem_stat
   end
 
   # @param domain [DomainId]

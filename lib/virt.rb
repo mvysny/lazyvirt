@@ -191,7 +191,7 @@ class VirtCmd
   # Returns all available domain data.
   # @param domstats_file [String] outcome of `virsh domstats`, for testing only.
   # @param sampled_at [Integer] millis since epoch, for testing only.
-  # @return [Hash<String => DomainData>] domain data
+  # @return [Hash<String => DomainData>] domain data, maps VM name to {DomainData}
   def domain_data(domstats_file = nil, sampled_at = nil)
     domstats_file ||= `virsh domstats`
     sampled_at ||= DomainData.millis_now
@@ -269,12 +269,12 @@ class VirtCmd
                 values['Thread(s) per core'].to_i)
   end
 
-  # @param domainid [DomainId]
+  # @param domain_name [String]
   # @param new_active [Integer]
-  def set_active(domainid, new_active)
+  def set_active(domain_name, new_active)
     raise "#{new_active} must be at least 128m" if new_active < 128 * 1024 * 1024
 
-    `virsh setmem #{domainid.id || domainid.name} #{new_active / 1024}`
+    `virsh setmem "#{domain_name}" "#{new_active / 1024}"`
   end
 end
 

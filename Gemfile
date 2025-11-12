@@ -4,10 +4,10 @@ source 'https://rubygems.org'
 ruby '>= 3.3'
 
 gem 'pastel'
+gem 'rufus-scheduler'
 gem 'tty-box', '~> 0.7.0'
 gem 'tty-cursor', '~> 0.7.1'
 gem 'tty-screen'
-gem 'rufus-scheduler'
 gem 'unicode-display_width'
 
 group :development do
@@ -17,4 +17,5 @@ end
 
 group :test do
   gem 'minitest', '~> 5.26.0'
+  gem 'timecop'
 end
