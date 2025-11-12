@@ -441,6 +441,6 @@ class FakeVirtClient
   # @param domainid [DomainId]
   # @param new_active [Integer]
   def set_active(domainid, new_active)
-    $log.info "#{domainid}: setting new memory to #{format_byte_size(new_active)}"
+    $log.info "#{domainid.name}: setting new memory to #{format_byte_size(new_active)}"
   end
 end

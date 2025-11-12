@@ -18,13 +18,17 @@ end
 
 # Controls the memory for one VM. The VM must support ballooning otherwise nothing is done.
 # The memory upgrade is instant, but the memory downgrade happens only once awhile.
-#
-# - `virt_cache` {VirtCache}
-# - `vmid` {DomainId}
-class BallooningVM < Data.define(:virt_cache, :vmid)
+class BallooningVM
+  # @param virt_cache [VirtCache]
+  # @vmid [DomainId]
+  def initialize(virt_cache, vmid)
+    @virt_cache = virt_cache
+    @vmid = vmid
+  end
+
   # Call every 2 seconds, to control the VM
   def update
-    mem_stat = virt_cache.memstat(vmid)
+    mem_stat = @virt_cache.memstat(@vmid)
     if mem_stat.nil?
       # VM is shut off. mark as back_off - we don't want to downgrade the memory
       # while the VM is booting up.
@@ -52,7 +56,7 @@ class BallooningVM < Data.define(:virt_cache, :vmid)
     # Return early if nothing to do
     return if memory_delta.zero?
 
-    info = virt_cache.info(vmid)
+    info = @virt_cache.info(@vmid)
     return if info.nil?
 
     # calculate min/max memory
@@ -63,12 +67,12 @@ class BallooningVM < Data.define(:virt_cache, :vmid)
     return if min_memory_floor > max_memory
 
     min_memory = min_memory.clamp(1 * 1024 * 1024 * 1024, max_memory)
-    new_active = mem_stat.active * (memory_delta + 100) / 100
+    new_active = mem_stat.actual * (memory_delta + 100) / 100
     new_active = new_active.clamp(min_memory..max_memory)
-    return if new_active == mem_stat.active
+    return if new_active == mem_stat.actual
 
     back_off
-    virt_cache.set_active(vmid, new_active)
+    @virt_cache.set_active(@vmid, new_active)
   end
 
   private
