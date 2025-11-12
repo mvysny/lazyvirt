@@ -353,12 +353,12 @@ class LibVirtClient
 end
 
 # Produces random data
-class FakeVirtClient
+class RandomVirt
   def initialize
-    @vms = { 'BASE' => FakeVirtClient.random_vm_info('BASE'),
-             'Ubuntu' => FakeVirtClient.random_vm_info('Ubuntu'),
-             'win11' => FakeVirtClient.random_vm_info('win11'),
-             'Fedora' => FakeVirtClient.random_vm_info('Fedora') }
+    @vms = { 'BASE' => RandomVirt.random_vm_info('BASE'),
+             'Ubuntu' => RandomVirt.random_vm_info('Ubuntu'),
+             'win11' => RandomVirt.random_vm_info('win11'),
+             'Fedora' => RandomVirt.random_vm_info('Fedora') }
     @vm_state = { 'BASE' => :shut_off,
                   'Ubuntu' => :running,
                   'win11' => :running,
@@ -387,8 +387,8 @@ class FakeVirtClient
       prev_info = @last_domain_data[name]
       cpu_usage = rand * info.cpus
       cpu_time = prev_info.nil? ? 0.0 : prev_info.cpu_time + time_diff_millis * cpu_usage
-      mem_stat = FakeVirtClient.random_mem_stat(info, state)
-      disk_stat = [FakeVirtClient.random_disk_stat(name)]
+      mem_stat = RandomVirt.random_mem_stat(info, state)
+      disk_stat = [RandomVirt.random_disk_stat(name)]
       result[name] = DomainData.new(info, state, sampled_at, cpu_time, mem_stat, disk_stat)
     end
     @last_sampled_at = sampled_at

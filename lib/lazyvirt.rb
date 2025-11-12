@@ -16,7 +16,7 @@ $p = Pastel.new
 # Don't use LibVirtClient for now: it doesn't provide all necessary data
 # virt = LibVirtClient.new
 virt = VirtCmd.new if VirtCmd.available?
-virt ||= FakeVirtClient.new
+virt ||= RandomVirt.new
 virt_cache = VirtCache.new(virt)
 
 class SystemWindow < Window
@@ -135,7 +135,7 @@ end
 scheduler.every '2s' do
   virt_cache.update
   screen.update_data
-  # ballooning.update
+  #  ballooning.update
   $log.info 'data updated'
 rescue StandardError => e
   $log.error 'Failed to update VM data', e: e
