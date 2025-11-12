@@ -96,6 +96,7 @@ class Screen
     @virt_cache = virt_cache
     @system = SystemWindow.new(virt_cache)
     @vms = VMWindow.new(virt_cache)
+    $log = LogWindow.new
   end
 
   # Clears the TTY screen
@@ -111,6 +112,7 @@ class Screen
     left_pane_w = sw / 2
     @system.rect = Rect.new(0, 0, left_pane_w, 6)
     @vms.rect = Rect.new(0, 6, left_pane_w, sh - 6)
+    $log.rect = Rect.new(left_pane_w, 0, sw - left_pane_w, sh)
   end
 
   def update_data
@@ -132,8 +134,7 @@ scheduler.every '2s' do
   virt_cache.update
   screen.update_data
 rescue StandardError => e
-  screen.clear
-  puts e, e.backtrace
+  $log.error 'Failed to update VM data', e
 end
 
 loop do
