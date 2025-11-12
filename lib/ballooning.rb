@@ -4,7 +4,7 @@ class Ballooning
   # @param virt_cache [VirtCache]
   def initialize(virt_cache)
     @virt_cache = virt_cache
-    # maps {DomainId} to {BallooningVM}
+    # maps {String} to {BallooningVM}
     @ballooning = {}
   end
 
@@ -20,7 +20,7 @@ end
 # The memory upgrade is instant, but the memory downgrade happens only once awhile.
 class BallooningVM
   # @param virt_cache [VirtCache]
-  # @vmid [DomainId]
+  # @param vmid [String]
   def initialize(virt_cache, vmid)
     @virt_cache = virt_cache
     @vmid = vmid
