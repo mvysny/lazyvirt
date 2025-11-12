@@ -4,6 +4,14 @@ require 'interpolator'
 require 'virt'
 # Emulates a bunch of VMs.
 class VMEmulator
+  # @param hostinfo [CpuInfo]
+  def initialize(hostinfo: CpuInfo.new('emulator', 1, 4, 2))
+    @hostinfo = hostinfo
+    # Hash{String => VM}
+    @vms = {}
+  end
+  attr_reader :hostinfo
+
   # A VM. When started, the memory used by guest apps slowly ramps to `started_initial_apps`. The `disk_caches` value stays
   # at around 1GB (or less, depending what makes most sense).
   class VM
@@ -115,22 +123,28 @@ class VMEmulator
     end
   end
 
-  def initialize
-    # Hash{String => VM}
-    @vms = {}
-  end
-
   # Adds a new VM.
   # @param vm [VM]
+  # @return [VM]
   def add(vm)
     raise "VM with given name already present: #{vm.name}: #{@vms.keys}" if @vms.keys.include? vm.name
 
     @vms[vm.name] = vm
+    vm
   end
 
   # Deletes VM with given name
   # @param name [String]
   def delete(name)
     @vms.delete(name)
+  end
+
+  # @return [Hash{String => DomainData}]
+  def domain_data
+    @vms.map do |name, vm|
+      state = vm.running? ? :running : :shut_off
+      data = DomainData.new(vm.info, state, DomainData.millis_now, 0, vm.to_mem_stat, [])
+      [name, data]
+    end.to_h
   end
 end

@@ -122,3 +122,23 @@ class TestVM < Minitest::Test
     end
   end
 end
+
+class TestVMEmulator < Minitest::Test
+  def test_new_empty
+    assert VMEmulator.new.domain_data.empty?
+    assert !VMEmulator.new.hostinfo.nil?
+  end
+
+  def test_smoke_virtcache
+    VirtCache.new(VMEmulator.new)
+  end
+
+  def test_virtcache_with_some_vms
+    e = VMEmulator.new
+    e.add(VMEmulator::VM.simple('vm0')).start
+    e.add(VMEmulator::VM.simple('vm1'))
+    assert_equal 2, e.domain_data.size
+    c = VirtCache.new(e)
+    assert_equal %w[vm0 vm1], c.domains
+  end
+end
