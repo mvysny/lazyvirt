@@ -136,7 +136,7 @@ end
 scheduler.every '2s' do
   virt_cache.update
   screen.update_data
-  #  ballooning.update
+  # ballooning.update
 rescue StandardError => e
   $log.error 'Failed to update VM data', e: e
 end
