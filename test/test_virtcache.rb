@@ -16,7 +16,15 @@ class TestVirtCache < Minitest::Test
 
   def test_total_rss
     Timecop.freeze(Time.now) do
-      assert_equal 2415919104, VirtCache.new(vm_emulator_demo).total_vm_rss_usage
+      assert_equal 2_415_919_104, VirtCache.new(vm_emulator_demo).total_vm_rss_usage
     end
+  end
+
+  def test_running
+    c = VirtCache.new(vm_emulator_demo)
+    assert c.running?('Ubuntu')
+    assert c.running?('win11')
+    assert !c.running?('BASE')
+    assert !c.running?('non-existing-cm')
   end
 end
