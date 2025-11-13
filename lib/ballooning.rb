@@ -102,7 +102,6 @@ class BallooningVM
     back_off
 
     @status = "Setting actual to #{new_actual}"
-    puts min_memory, mem_stat, new_actual, max_memory, memory_delta
     @virt_cache.set_actual(@vmid, new_actual)
   end
 
