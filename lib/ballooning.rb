@@ -21,7 +21,10 @@ class Ballooning
   # log statuses
   def log_statuses
     return unless $log.debug_enabled?
-    statuses = @ballooning.filter { |vmid, ballooning| ballooning.was_running? } .map { |vmid, ballooning| "#{vmid}: #{ballooning.status}" } .join ', '
+
+    statuses = @ballooning.filter do |_vmid, ballooning|
+      ballooning.was_running?
+    end.map { |vmid, ballooning| "#{vmid}: #{ballooning.status}" }.join ', '
     $log.debug 'Ballooning: ' + statuses
   end
 end
@@ -44,6 +47,8 @@ class BallooningVM
     #
     # 20 seconds is a safe bet, but we can use 10 seconds since we decrease memory gently, by 10% tops, which is fast.
     @back_off_seconds = 10
+
+    # It takes ~15 seconds for a VM to start.
     @boot_back_off_seconds = 15
 
     # start by backing off. We don't know what state the VM is in - it could have been
