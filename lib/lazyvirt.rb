@@ -63,12 +63,14 @@ class VMWindow < Window
     domains = @virt_cache.domains.sort # Array<String>
     content do |lines|
       domains.each do |domain_name|
-        data = @virt_cache.data(domain_name)
+        cache = @virt_cache.cache(domain_name)
+        data = cache.data
         state = data.state
         line = "#{@f.format_domain_state(state)} #{$p.white(domain_name)}"
         memstat = data.mem_stat
         if data.running?
           line += " \u{1F388}" if data.balloon?
+          line += " \u{1F422}" if cache.stale?
           line += "   #{$p.bright_red('Host RSS RAM')}: #{@f.format(memstat.host_mem)}"
         end
         lines << line

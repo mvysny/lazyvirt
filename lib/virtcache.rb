@@ -80,12 +80,20 @@ class VirtCache
   # VM cached data.
   # - `data` {DomainData}
   # - `cpu_usage` [Float] CPU usage in %; 100% means one CPU core was fully utilized. 0 or greater, may be greater than 100.
-  class VMCache < Data.define(:data, :cpu_usage)
+  # - `mem_data_age_seconds` [Float] memory data age in seconds; `nil` if balloon unavailable or VM is shot down.
+  class VMCache < Data.define(:data, :cpu_usage, :mem_data_age_seconds)
     # @param prev_data [DomainData | nil] previous VM data
     # @param next_data [DomainData] current VM data
     # @return [VMCache]
     def self.diff(prev_data, next_data)
-      VMCache.new(next_data, next_data.cpu_usage(prev_data))
+      age = if next_data.mem_stat.nil?
+              nil
+            elsif prev_data&.mem_stat.nil?
+              0
+            else
+              next_data.mem_stat.last_updated - prev_data.mem_stat.last_updated
+            end
+      VMCache.new(next_data, next_data.cpu_usage(prev_data), age)
     end
 
     # @return [DomainInfo]
@@ -98,6 +106,10 @@ class VirtCache
     # @return [Float] CPU usage 0..100%, 100%=full usage of all guest CPU cores.
     def guest_cpu_usage
       cpu_usage / info.cpus
+    end
+
+    def stale?
+      !mem_data_age_seconds.nil? && mem_data_age_seconds >= 5
     end
   end
 
