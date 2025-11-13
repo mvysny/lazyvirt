@@ -38,18 +38,27 @@ class BallooningVM
     back_off
   end
 
+  attr_reader :status
+
   # Call every 2 seconds, to control the VM
   def update
     mem_stat = @virt_cache.memstat(@vmid)
-    if !@virt_cache.running?(@vmid) || mem_stat.nil?
+    puts mem_stat
+    puts @vmid
+    puts @virt_cache.running?(@vmid)
+    if mem_stat.nil? || !@virt_cache.running?(@vmid)
       # VM is shut off. Don't fiddle with the memory.
       # Mark as back_off - this way we'll back off from the VM until it boots up.
       back_off
+      @status = 'vm stopped, doing nothing'
       return
     end
 
     # If the VM has no support for ballooning, do nothing
-    return unless mem_stat.guest_data_available?
+    unless mem_stat.guest_data_available?
+      @status = 'ballooning unsupported by the VM'
+      return
+    end
 
     # 0..100
     percent_used = mem_stat.guest_mem.percent_used
@@ -62,28 +71,42 @@ class BallooningVM
       memory_delta = 20
     elsif percent_used <= 60
       # decrease memory if not in back_off period
-      memory_delta = -10 unless backing_off?
+      if backing_off?
+        @status = "only #{percent_used}% memory used, but backing off at the moment"
+        return
+      end
+      memory_delta = -10
     end
 
     # Return early if nothing to do
-    return if memory_delta.zero?
+    if memory_delta.zero?
+      @status = "app memory in sweet spot (#{percent_used}), doing nothing"
+      return
+    end
 
     info = @virt_cache.info(@vmid)
-    return if info.nil?
+    raise 'unexpected: info is nil' if info.nil?
 
     # calculate min/max memory
     max_memory = info.max_memory
-    return if @min_active > max_memory
+    if @min_active > max_memory
+      @status = "VM max memory #{max_memory} is below min_active #{@min_active}, doing nothing"
+      return
+    end
 
     min_memory = @min_active.clamp(nil, max_memory)
-    new_active = mem_stat.actual * (memory_delta + 100) / 100
-    new_active = new_active.clamp(min_memory..max_memory)
-    return if new_active == mem_stat.actual
+    new_actual = mem_stat.actual * (memory_delta + 100) / 100
+    new_actual = new_actual.clamp(min_memory..max_memory)
+    if new_actual == mem_stat.actual
+      @status = "New actual #{new_actual} is the same as current one #{mem_stat.actual}, doing nothing"
+      return
+    end
 
     back_off
 
-    puts min_memory, mem_stat, new_active, max_memory, memory_delta
-    @virt_cache.set_actual(@vmid, new_active)
+    @status = "Setting actual to #{new_actual}"
+    puts min_memory, mem_stat, new_actual, max_memory, memory_delta
+    @virt_cache.set_actual(@vmid, new_actual)
   end
 
   private
