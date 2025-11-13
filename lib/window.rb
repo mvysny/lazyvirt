@@ -105,7 +105,7 @@ class LogWindow < Window
   end
 
   private def ellipsize(str, max_length)
-    str.length <= max_length ? str : str[0..(max_length - 2)] + '..'
+    str.length <= max_length ? str : str[0...(max_length - 2)] + '..'
   end
 
   private def log(level, text, exception)
@@ -117,7 +117,7 @@ class LogWindow < Window
     end
     @log_lines += text_lines
     @log_lines = @log_lines.last((rect.height - 2).clamp(0..100))
-    content_width = rect.width - 2
+    content_width = rect.width - 4
     if content_width < 0
       self.content = []
     else
