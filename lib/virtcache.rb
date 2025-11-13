@@ -43,7 +43,7 @@ class VirtCache
   # @param domain [String] domain name
   # @return [Symbol] one of `:running`, `:shut_off`, `:paused`, `:other`
   def state(domain)
-    data(domain).state || :other
+    data(domain)&.state || :other
   end
 
   # @param domain [String] domain name
