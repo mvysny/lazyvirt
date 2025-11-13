@@ -47,6 +47,12 @@ class VirtCache
   end
 
   # @param domain [String] domain name
+  # @return [Boolean] `true` if running
+  def running?(domain)
+    state(domain) == :running
+  end
+
+  # @param domain [String] domain name
   # @return [DomainInfo | nil]
   def info(domain)
     data(domain)&.info
