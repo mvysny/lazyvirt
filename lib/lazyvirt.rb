@@ -92,17 +92,19 @@ class VMWindow < Window
     line = "#{@f.format_domain_state(cache.data.state)} #{$p.white(cache.info.name)}"
     memstat = cache.data.mem_stat
     if cache.data.running?
-      line += " \u{1F388}" if cache.data.balloon?
-      balloon_status = @ballooning.status(cache.info.name)
-      unless balloon_status.nil?
-        sc = if balloon_status.memory_delta.negative?
+      if cache.data.balloon?
+        line += " \u{1F388}"
+        balloon_status = @ballooning.status(cache.info.name)
+        unless balloon_status.nil?
+          sc = if balloon_status.memory_delta.negative?
                "\u{2193}"
              elsif balloon_status.memory_delta.positive?
                "\u{2191}"
              else
                '-'
              end
-        line += sc
+          line += sc
+        end
       end
       line += " \u{1F422}" if cache.stale?
       line += "   #{$p.bright_red('Host RSS RAM')}: #{@f.format(memstat.host_mem)}"
