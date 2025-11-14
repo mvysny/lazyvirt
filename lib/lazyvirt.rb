@@ -65,15 +65,7 @@ class VMWindow < Window
       domains.each do |domain_name|
         cache = @virt_cache.cache(domain_name)
         data = cache.data
-        state = data.state
-        line = "#{@f.format_domain_state(state)} #{$p.white(domain_name)}"
-        memstat = data.mem_stat
-        if data.running?
-          line += " \u{1F388}" if data.balloon?
-          line += " \u{1F422}" if cache.stale?
-          line += "   #{$p.bright_red('Host RSS RAM')}: #{@f.format(memstat.host_mem)}"
-        end
-        lines << line
+        lines << format_vm_overview_line(domain_name)
         if data.running?
 
           cpu_usage = @virt_cache.cache(domain_name).guest_cpu_usage.round(2)
@@ -90,6 +82,19 @@ class VMWindow < Window
         end
       end
     end
+  end
+
+  def format_vm_overview_line(vm_name)
+    # VirtCache::VMCache
+    cache = @virt_cache.cache(domain_name)
+    line = "#{@f.format_domain_state(cache.data.state)} #{$p.white(vm_name)}"
+    memstat = cache.data.mem_stat
+    if data.running?
+      line += " \u{1F388}" if data.balloon?
+      line += " \u{1F422}" if cache.stale?
+      line += "   #{$p.bright_red('Host RSS RAM')}: #{@f.format(memstat.host_mem)}"
+    end
+    line
   end
 end
 
