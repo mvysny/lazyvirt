@@ -75,7 +75,13 @@ More info at [VirtIO Memory Ballooning](https://pmhahn.github.io/virtio-balloon/
 
 ## Automatic Balloon inflate/deflate
 
-TODO not yet implemented.
+A running VM with ballooning support is observed, and a decision is made every 2 seconds. If the memory usage goes above 70%, the VM memory is
+increased immediately by 30%. This helps if there's a sudden VM memory demand.
+If the memory usage goes below 60%, a memory is decreased by 10%, but this only happens every 10 seconds.
+
+In other words, if VM needs memory, the memory is given immediately. Afterwards, the memory is slowly decreased as the usage goes down.
+
+At the moment this can not be disabled - I'm working on making this controllable via a keyboard.
 
 # Developing
 
