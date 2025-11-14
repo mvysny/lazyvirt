@@ -30,6 +30,12 @@ class Ballooning
   end
 end
 
+# @param vm_name [String] vm name
+# @return [Status | nil] the VM ballooning status
+def status(vm_name)
+  @ballooning[vm_name]&.status
+end
+
 # Controls the memory for one VM. The VM must support ballooning otherwise nothing is done.
 # The memory upgrade is instant, but the memory downgrade happens only once awhile.
 class BallooningVM
@@ -62,7 +68,11 @@ class BallooningVM
     # just started seconds ago.
     back_off duration_seconds: @boot_back_off_seconds
 
+    # {Boolean} if the VM was running during the last ballooning update
     @was_running = false
+
+    # {Integer | nil} the value of {MemStat.last_updated} or nil
+    @last_update_at = nil
   end
 
   # - `text` [String] textual representation of the change, useful for debug purposes.
@@ -89,10 +99,15 @@ class BallooningVM
       back_off
       @status = Status.new('vm stopped, doing nothing', 0)
       @was_running = false
+      @last_update_at = nil
       return
     end
 
     @was_running = true
+    if @last_update_at == mem_stat.last_updated
+      @status = Status.new('no new data', 0)
+      return
+    end
 
     # If the VM has no support for ballooning, do nothing
     unless mem_stat.guest_data_available?
