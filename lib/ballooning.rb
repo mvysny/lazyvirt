@@ -114,6 +114,7 @@ class BallooningVM
       @status = Status.new('no new data', 0)
       return
     end
+    @last_update_at = mem_stat.last_updated
 
     # If the VM has no support for ballooning, do nothing
     unless mem_stat.guest_data_available?
