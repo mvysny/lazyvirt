@@ -16,8 +16,8 @@ class VMEmulator
   attr_reader :hostinfo
   attr_accessor :allow_set_actual
 
-  # A VM. When started, the memory used by guest apps slowly ramps to `started_initial_apps`. The `disk_caches` value stays
-  # at around 1GB (or less, depending what makes most sense).
+  # A VM. When started, the memory used by guest apps slowly ramps to `started_initial_apps`. The `disk_caches` value
+  # stays at around 1GB (or less, depending what makes most sense).
   class VM
     # We'll pretend that the apps need at least 128m
     MIN_APP_MEMORY = 128 * 1024 * 1024
