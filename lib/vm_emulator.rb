@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_local 'interpolator'
-require_local 'virt'
-require_local 'byte_prefixes'
+require_relative 'interpolator'
+require_relative 'virt'
+require_relative 'byte_prefixes'
 
 # Emulates a bunch of VMs.
 class VMEmulator

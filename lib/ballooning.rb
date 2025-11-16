@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_local 'byte_prefixes'
+require_relative 'byte_prefixes'
 
 # Controls all VMs.
 class Ballooning
