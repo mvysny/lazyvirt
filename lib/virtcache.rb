@@ -2,6 +2,7 @@
 
 require_relative 'sysinfo'
 require_relative 'virt'
+require_relative 'byte_prefixes'
 
 # Caches all VM runtime info for speedy access.
 class VirtCache
@@ -71,7 +72,7 @@ class VirtCache
     raise "#{domain} not existing" if info.nil?
 
     # sanity check the new_active
-    raise "#{new_actual} must be at least 128m" if new_actual < 128 * 1024 * 1024
+    raise "#{new_actual} must be at least 128m" if new_actual < 128.MiB
     raise "#{new_actual} can not go over max #{info.max_memory}" if new_actual > info.max_memory
 
     @virt.set_actual(domain, new_actual)
