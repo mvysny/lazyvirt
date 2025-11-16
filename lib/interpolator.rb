@@ -20,6 +20,11 @@ module Interpolator
       raise "#{time_from} can't be later than #{time_to}" if time_from > time_to
     end
 
+    # Interpolates value from now for the duration of `duration_seconds`.
+    # @param value_from [Numeric] start value
+    # @param value_to [Numeric] end value
+    # @param duration_seconds [Numeric] how long does it take to go from `value_from` to `value_to`
+    # @return [:value] interpolation
     def self.from_now(value_from, value_to, duration_seconds)
       return Const.new(value_from) if value_from == value_to
 
@@ -27,6 +32,8 @@ module Interpolator
       Linear.new(value_from, value_to, now, now + duration_seconds)
     end
 
+    # Returns the current value
+    # @return [Numeric] current value
     def value
       now = Time.now
       return value_from if now < time_from
