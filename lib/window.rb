@@ -69,7 +69,7 @@ class Window
   private
 
   def repaint_content
-    return if @rect.empty? || @rect.top < 0 || @rect.left < 0
+    return if @rect.empty? || @rect.top.negative? || @rect.left.negative?
 
     width = @rect.width - 4 # 1 character for window frame, 1 character for padding
 
@@ -106,24 +106,24 @@ class LogWindow < Window
     @log_level <= 1
   end
 
-  def error(text, e: nil)
-    log 'E', text, e
+  def error(text, exception: nil)
+    log 'E', text, exception
   end
 
-  def warning(text, e: nil)
-    log 'W', text, e
+  def warning(text, exception: nil)
+    log 'W', text, exception
   end
 
-  def info(text, e: nil)
-    log 'I', text, e if info_enabled?
+  def info(text, exception: nil)
+    log 'I', text, exception if info_enabled?
   end
 
-  def debug(text, e: nil)
-    log 'D', text, e if debug_enabled?
+  def debug(text, exception: nil)
+    log 'D', text, exception if debug_enabled?
   end
 
   private def ellipsize(str, max_length)
-    str.length <= max_length ? str : str[0...(max_length - 2)] + '..'
+    str.length <= max_length ? str : "#{str[0...(max_length - 2)]}.."
   end
 
   private def log(level, text, exception)
@@ -136,7 +136,7 @@ class LogWindow < Window
     @log_lines += text_lines
     @log_lines = @log_lines.last((rect.height - 2).clamp(0..100))
     content_width = rect.width - 4
-    if content_width < 0
+    if content_width.negative?
       self.content = []
     else
       @log_lines.map! { |it| ellipsize(it, content_width) }
