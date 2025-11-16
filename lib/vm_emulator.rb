@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
-require 'interpolator'
-require 'virt'
+require_local 'interpolator'
+require_local 'virt'
+require_local 'byte_prefixes'
 
 # Emulates a bunch of VMs.
 class VMEmulator
@@ -20,10 +21,10 @@ class VMEmulator
   # stays at around 1GB (or less, depending what makes most sense).
   class VM
     # We'll pretend that the apps need at least 128m
-    MIN_APP_MEMORY = 128 * 1024 * 1024
+    MIN_APP_MEMORY = 128.MiB
     # Kernel+BIOS will need 128m of RAM. This will be the difference between
     # [MemStat.actual] and [MemStat.available].
-    BIOS_KERNEL = 128 * 1024 * 1024
+    BIOS_KERNEL = 128.MiB
     # Min. value of [MemStat.actual].
     MIN_ACTUAL = MIN_APP_MEMORY + BIOS_KERNEL
 
@@ -34,14 +35,14 @@ class VMEmulator
     #   memory. Once started, the VM mem usage slowly climbs to this value. You can call {:set_used} to set a new usage
     #   value.
     def initialize(info, initial_actual, started_initial_apps)
-      raise "max_memory must be #{MIN_ACTUAL} or higher" if info.max_memory < 128 * 1024 * 1024
-      raise "initial_actual must be #{MIN_ACTUAL} or higher" if initial_actual < 128 * 1024 * 1024
+      raise "max_memory must be #{MIN_ACTUAL} or higher" if info.max_memory < 128.MiB
+      raise "initial_actual must be #{MIN_ACTUAL} or higher" if initial_actual < 128.MiB
       raise "initial mem for apps must be at least #{MIN_APP_MEMORY}" if started_initial_apps < MIN_APP_MEMORY
 
       @info = info
       @started_initial_apps = started_initial_apps
       @initial_actual = initial_actual
-      @disk_caches = 1 * 1024 * 1024 * 1024
+      @disk_caches = 1.GiB
       @startup_seconds = 10
       @shutdown_seconds = 5
       # How many seconds it will take for the VM to decrease its active memory.
@@ -52,7 +53,7 @@ class VMEmulator
     # @param name [String]
     # @param actual [Integer] initial value of [MemStat.actual].
     # @return [VM]
-    def self.simple(name, actual: 2 * 1024 * 1024 * 1024, max_actual: actual * 256)
+    def self.simple(name, actual: 2.GiB, max_actual: actual * 256)
       VM.new(DomainInfo.new(name, 1, max_actual), actual, actual / 2)
     end
 
