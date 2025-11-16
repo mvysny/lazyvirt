@@ -5,8 +5,6 @@ require 'tty-cursor'
 require 'pastel'
 require 'unicode/display_width'
 
-$p = Pastel.new
-
 # A rectangle, with {Integer} `left`, `top`, `width` and `height`.
 class Rect < Data.define(:left, :top, :width, :height)
   def empty?
@@ -21,9 +19,10 @@ class Window
     @caption = caption
     @lines = []
     @auto_scroll = false
+    @p = Pastel.new
   end
 
-  attr_reader :caption, :rect
+  attr_reader :caption, :rect, :p
 
   # Sets new caption and repaints the window
   # @param new_caption [String | nil]
@@ -76,7 +75,7 @@ class Window
     (0..(@rect.height - 3)).each do |line_no|
       line = (@lines[line_no] || '').to_s
       # strip the formatting before counting printable characters
-      length = Unicode::DisplayWidth.of($p.strip(line))
+      length = Unicode::DisplayWidth.of(@p.strip(line))
       line += ' ' * (width - length) if length < width
 
       print TTY::Cursor.move_to(@rect.left + 2, line_no + @rect.top + 1), line

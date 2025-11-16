@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative 'virt'
 require_relative 'window'
 require_relative 'sysinfo'
@@ -12,14 +14,13 @@ require_relative 'vm_emulator'
 
 scheduler = Rufus::Scheduler.new
 
-$p = Pastel.new
-
 # Don't use LibVirtClient for now: it doesn't provide all necessary data
 # virt = LibVirtClient.new
 virt = VirtCmd.new if VirtCmd.available?
 virt ||= vm_emulator_demo
 virt_cache = VirtCache.new(virt)
 
+# Shows host OS info, such as CPU info, memory info.
 class SystemWindow < Window
   # @param virt_cache [VirtCache]
   def initialize(virt_cache)
@@ -34,10 +35,10 @@ class SystemWindow < Window
     content do |lines|
       # CPU
       host_cpu_usage = @virt_cache.host_cpu_usage
-      lines << "#{@cpu}; #{$p.bright_blue(host_cpu_usage)}% used"
+      lines << "#{@cpu}; #{@p.bright_blue(host_cpu_usage)}% used"
       vm_cpu_usage = @virt_cache.total_vm_cpu_usage.round(2)
       pb = @f.progress_bar(20, 100, [[vm_cpu_usage.to_i, :magenta], [host_cpu_usage.to_i, :bright_blue]])
-      lines << "     [#{pb}] #{$p.bright_blue(vm_cpu_usage)}% used by VMs"
+      lines << "     [#{pb}] #{@p.bright_blue(vm_cpu_usage)}% used by VMs"
       lines << @f.format(@virt_cache.host_mem_stat)
 
       # Memory
@@ -45,11 +46,12 @@ class SystemWindow < Window
       total_vm_rss_usage = @virt_cache.total_vm_rss_usage
       ram_use = [[total_vm_rss_usage, :magenta], [@virt_cache.host_mem_stat.ram.used, :bright_red]]
       pb = @f.progress_bar(20, total_ram, ram_use)
-      lines << "     [#{pb}] #{$p.magenta(format_byte_size(total_vm_rss_usage))} used by VMs"
+      lines << "     [#{pb}] #{@p.magenta(format_byte_size(total_vm_rss_usage))} used by VMs"
     end
   end
 end
 
+# Shows a quick overview of all VMs
 class VMWindow < Window
   # @param virt_cache [VirtCache]
   # @param ballooning [Ballooning]
@@ -72,10 +74,10 @@ class VMWindow < Window
         if data.running?
           cpu_usage = @virt_cache.cache(domain_name).guest_cpu_usage.round(2)
           guest_mem_usage = cache.data.mem_stat.guest_mem
-          lines << "    #{$p.bright_blue('Guest CPU')}: [#{@f.progress_bar(20, 100,
-                                                                           [[cpu_usage.to_i, :bright_blue]])}] #{$p.bright_blue(cpu_usage)}%; #{data.info.cpus} #cpus"
+          lines << "    #{@p.bright_blue('Guest CPU')}: [#{@f.progress_bar(20, 100,
+                                                                           [[cpu_usage.to_i, :bright_blue]])}] #{@p.bright_blue(cpu_usage)}%; #{data.info.cpus} #cpus"
           unless guest_mem_usage.nil?
-            lines << "    #{$p.bright_red('Guest RAM')}: [#{@f.progress_bar(20, guest_mem_usage.total,
+            lines << "    #{@p.bright_red('Guest RAM')}: [#{@f.progress_bar(20, guest_mem_usage.total,
                                                                             [[guest_mem_usage.used, :bright_red]])}] #{@f.format(guest_mem_usage)}"
           end
         end
@@ -89,7 +91,7 @@ class VMWindow < Window
   # @param cache [VirtCache::VMCache]
   # @return [String]
   def format_vm_overview_line(cache)
-    line = "#{@f.format_domain_state(cache.data.state)} #{$p.white(cache.info.name)}"
+    line = "#{@f.format_domain_state(cache.data.state)} #{@p.white(cache.info.name)}"
     memstat = cache.data.mem_stat
     if cache.data.running?
       if cache.data.balloon?
@@ -97,17 +99,17 @@ class VMWindow < Window
         balloon_status = @ballooning.status(cache.info.name)
         unless balloon_status.nil?
           sc = if balloon_status.memory_delta.negative?
-               "\u{2193}"
-             elsif balloon_status.memory_delta.positive?
-               "\u{2191}"
-             else
-               '-'
-             end
+                 "\u{2193}"
+               elsif balloon_status.memory_delta.positive?
+                 "\u{2191}"
+               else
+                 '-'
+               end
           line += sc
         end
       end
       line += " \u{1F422}" if cache.stale?
-      line += "   #{$p.bright_red('Host RSS RAM')}: #{@f.format(memstat.host_mem)}"
+      line += "   #{@p.bright_red('Host RSS RAM')}: #{@f.format(memstat.host_mem)}"
     end
     line
   end
