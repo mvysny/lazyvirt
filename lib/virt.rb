@@ -2,6 +2,7 @@
 
 require_relative 'sysinfo'
 require 'date'
+require_relative 'byte_prefixes'
 
 # VM memory stats
 #
@@ -189,20 +190,20 @@ class VirtCmd
     result = {}
     data.each do |domain, values|
       state = @states[values['state.state'].to_i] || :other
-      mem_current = values['balloon.current'].to_i * 1024
+      mem_current = values['balloon.current'].to_i.KiB
       domain_info = DomainInfo.new(domain, values['vcpu.maximum'].to_i,
-                                   values['balloon.maximum'].to_i * 1024)
+                                   values['balloon.maximum'].to_i.KiB)
       cpu_time = values['cpu.time'].to_i / 1_000_000
       mem_stat = nil
       if values.include?('balloon.rss') && values.include?('balloon.last-update')
-        mem_unused = values['balloon.unused']&.to_i&.*(1024)
-        mem_usable = values['balloon.usable']&.to_i&.*(1024)
-        mem_available = values['balloon.available']&.to_i&.*(1024)
+        mem_unused = values['balloon.unused']&.to_i&.KiB
+        mem_usable = values['balloon.usable']&.to_i&.KiB
+        mem_available = values['balloon.available']&.to_i&.KiB
         last_updated = values['balloon.last-update'].to_i
 
         mem_stat = MemStat.new(mem_current, mem_unused, mem_available, mem_usable,
-                               values['balloon.disk_caches']&.to_i&.*(1024),
-                               values['balloon.rss'].to_i * 1024, last_updated)
+                               values['balloon.disk_caches']&.to_i&.KiB,
+                               values['balloon.rss'].to_i.KiB, last_updated)
       end
 
       disk_stat = parse_disk_data(values)
@@ -247,7 +248,7 @@ class VirtCmd
   # @param domain_name [String]
   # @param new_actual [Integer]
   def set_actual(domain_name, new_actual)
-    raise "#{new_actual} must be at least 256m" if new_actual < 256 * 1024 * 1024
+    raise "#{new_actual} must be at least 256m" if new_actual < 256.MiB
 
     `virsh setmem "#{domain_name}" "#{new_actual / 1024}"`
     $log.info "#{domain_name}: setting new actual memory to #{format_byte_size(new_actual)}"
@@ -321,12 +322,12 @@ class LibVirtClient
     # Array<Libvirt::Domain::MemoryStats>
     mstats = @conn.lookup_domain_by_id(domain.id).memory_stats
     values = mstats.map { |it| [it.tag, it.instance_variable_get(:@val)] }.to_h
-    MemStat.new(actual: values[Libvirt::Domain::MemoryStats::ACTUAL_BALLOON].to_i * 1024,
-                unused: values[Libvirt::Domain::MemoryStats::UNUSED]&.to_i&.*(1024),
-                available: values[Libvirt::Domain::MemoryStats::AVAILABLE]&.to_i&.*(1024),
-                usable: nil, # values[Libvirt::Domain::MemoryStats::USABLE]&.to_i&.*(1024),
-                disk_caches: nil, # values[Libvirt::Domain::MemoryStats::DISK_CACHES]&.to_i&.*(1024),
-                rss: values[Libvirt::Domain::MemoryStats::RSS]&.to_i&.*(1024))
+    MemStat.new(actual: values[Libvirt::Domain::MemoryStats::ACTUAL_BALLOON].to_i.KiB,
+                unused: values[Libvirt::Domain::MemoryStats::UNUSED]&.to_i&.KiB,
+                available: values[Libvirt::Domain::MemoryStats::AVAILABLE]&.to_i&.KiB,
+                usable: nil, # values[Libvirt::Domain::MemoryStats::USABLE]&.to_i&.KiB,
+                disk_caches: nil, # values[Libvirt::Domain::MemoryStats::DISK_CACHES]&.to_i&.KiB,
+                rss: values[Libvirt::Domain::MemoryStats::RSS]&.to_i&.KiB)
   end
 
   # Domain (VM) information. Also available when VM is shut off.
@@ -339,6 +340,6 @@ class LibVirtClient
     # Libvirt::Domain::Info
     info = d.info
     DomainInfo.new(state: @states[info.state] || :other, cpus: info.nr_virt_cpu,
-                   max_memory: info.max_mem * 1024)
+                   max_memory: info.max_mem.KiB)
   end
 end
