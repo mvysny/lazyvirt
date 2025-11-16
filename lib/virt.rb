@@ -222,7 +222,7 @@ class VirtCmd
       allocation = data["block.#{block_index}.allocation"]&.to_i
       capacity = data["block.#{block_index}.capacity"]&.to_i
       physical = data["block.#{block_index}.physical"]&.to_i
-      unless allocation.nil? or capacity.nil? or physical.nil? or name.nil?
+      unless allocation.nil? || capacity.nil? || physical.nil? || name.nil?
         result << DiskStat.new(name, allocation, capacity,
                                physical)
       end
