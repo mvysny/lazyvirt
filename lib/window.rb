@@ -106,12 +106,16 @@ class LogWindow < Window
     @log_level <= 1
   end
 
+  def warning_enabled?
+    @log_level <= 2
+  end
+
   def error(text, exception: nil)
     log 'E', text, exception
   end
 
   def warning(text, exception: nil)
-    log 'W', text, exception
+    log 'W', text, exception if warning_enabled?
   end
 
   def info(text, exception: nil)
