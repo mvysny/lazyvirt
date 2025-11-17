@@ -37,7 +37,7 @@ class Window
 
   # Sets the new auto_scroll. If true, immediately scrolls to the bottom.
   # @param new_auto_scroll [Boolean] if true, keep scrolled to the bottom.
-  def auto_scroll=(new_auto_scroll)
+  def auto_scroll=(_new_auto_scroll)
     @auto_scroll = auto_scroll
     update_top_line_if_auto_scroll
   end
@@ -99,7 +99,9 @@ class Window
   # Appends given lines.
   # @param lines [Array<String>]
   def add_lines(lines)
-    @lines += lines
+    # split lines by newline
+    lines = lines.flat_map { it.to_s.split("\n") }
+    @lines += lines.map(&:rstrip)
     # TODO: optimize
     repaint_content unless update_top_line_if_auto_scroll
   end
@@ -154,57 +156,21 @@ class Window
   end
 end
 
-# Shows a log. Call one of [:error], [:warning], [:info], [:debug]
+# Shows a log. Plug to `TTY::Logger`
 # to log stuff.
 class LogWindow < Window
   def initialize
     super('Log')
-    self.log_level = 'W'
     self.auto_scroll = true
   end
 
-  # @param new_log_level [String] one of 'D', 'I', 'W', 'E'.
-  def log_level=(new_log_level)
-    @log_level = 'DIWE'.index new_log_level || 3
-  end
-
-  def debug_enabled?
-    @log_level <= 0
-  end
-
-  def info_enabled?
-    @log_level <= 1
-  end
-
-  def warning_enabled?
-    @log_level <= 2
-  end
-
-  def error(text, exception: nil)
-    log 'E', text, exception
-  end
-
-  def warning(text, exception: nil)
-    log 'W', text, exception if warning_enabled?
-  end
-
-  def info(text, exception: nil)
-    log 'I', text, exception if info_enabled?
-  end
-
-  def debug(text, exception: nil)
-    log 'D', text, exception if debug_enabled?
-  end
-
-  private
-
-  def log(level, text, exception)
-    text = "#{Time.now.strftime('%H:%M:%S')} #{level} #{text}"
-    text_lines = text.lines(chomp: true)
-    unless exception.nil?
-      text_lines << exception.message
-      text_lines += exception.backtrace.first(3) unless exception.backtrace.nil?
+  class IO
+    def initialize(window)
+      @window = window
     end
-    add_lines text_lines
+
+    def puts(string)
+      @window.add_line(string)
+    end
   end
 end

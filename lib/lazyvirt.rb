@@ -11,7 +11,12 @@ require 'io/console'
 require_relative 'formatter'
 require_relative 'ballooning'
 require_relative 'vm_emulator'
+require 'tty-logger'
 
+# https://github.com/piotrmurach/tty-logger
+$log = TTY::Logger.new do |config|
+  config.level = :warn
+end
 scheduler = Rufus::Scheduler.new
 
 # Don't use LibVirtClient for now: it doesn't provide all necessary data
@@ -123,8 +128,9 @@ class Screen
     @virt_cache = virt_cache
     @system = SystemWindow.new(virt_cache)
     @vms = VMWindow.new(virt_cache, ballooning)
-    $log = LogWindow.new
-    $log.log_level = 'I' # one of D I W E
+    @log = LogWindow.new
+    $log.remove_handler :console
+    $log.add_handler [:console, { output: LogWindow::IO.new(@log), enable_color: true }]
   end
 
   # Clears the TTY screen
@@ -140,7 +146,7 @@ class Screen
     left_pane_w = sw / 2
     @system.rect = Rect.new(0, 0, left_pane_w, 6)
     @vms.rect = Rect.new(0, 6, left_pane_w, sh - 6)
-    $log.rect = Rect.new(left_pane_w, 0, sw - left_pane_w, sh)
+    @log.rect = Rect.new(left_pane_w, 0, sw - left_pane_w, sh)
   end
 
   def update_data
@@ -166,7 +172,7 @@ scheduler.every '2s' do
   # Needs to go last, to correctly update current ballooning status
   screen.update_data
 rescue StandardError => e
-  $log.error 'Failed to update VM data', e: e
+  $log.fatal('Failed to update VM data', e)
 end
 
 loop do

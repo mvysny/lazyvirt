@@ -22,13 +22,13 @@ class Ballooning
 
   # debug-logs statuses
   def log_statuses
-    return unless $log.debug_enabled?
-
-    statuses = @ballooning.filter do |_vmid, ballooning|
-      ballooning.was_running?
+    $log.debug do
+      statuses = @ballooning.filter do |_vmid, ballooning|
+        ballooning.was_running?
+      end
+      statuses = statuses.map { |vmid, ballooning| "#{vmid}: #{ballooning.status.text}" }.join "\n"
+      "Ballooning: #{statuses}"
     end
-    statuses = statuses.map { |vmid, ballooning| "#{vmid}: #{ballooning.status.text}" }.join "\n"
-    $log.debug "Ballooning: #{statuses}"
   end
 
   # @param vm_name [String] vm name

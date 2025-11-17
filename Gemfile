@@ -8,6 +8,7 @@ gem 'rufus-scheduler'
 gem 'strings-truncation'
 gem 'tty-box', '~> 0.7.0'
 gem 'tty-cursor', '~> 0.7.1'
+gem 'tty-logger'
 gem 'tty-screen'
 gem 'unicode-display_width'
 

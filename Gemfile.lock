@@ -29,6 +29,8 @@ GEM
       tty-cursor (~> 0.7)
     tty-color (0.6.0)
     tty-cursor (0.7.1)
+    tty-logger (0.6.0)
+      pastel (~> 0.8)
     tty-screen (0.8.2)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
@@ -49,6 +51,7 @@ DEPENDENCIES
   timecop
   tty-box (~> 0.7.0)
   tty-cursor (~> 0.7.1)
+  tty-logger
   tty-screen
   unicode-display_width
   yard (~> 0.9.37)
