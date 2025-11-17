@@ -51,8 +51,8 @@ class BallooningVM
     # After Ballooning decreases active memory, it will back off for 20 seconds
     # before trying to decrease the memory again. Observation shows that
     # the effects of the memory decrease command in Linux guest isn't instant: instead it is gradual, and takes
-    # some time (5..15 seconds, depending on the difference in memory) to fully be applied. Let's not bother the VM with further
-    # memory decrease commands until the VM fully settles in.
+    # some time (5..15 seconds, depending on the difference in memory) to fully be applied. Let's not bother the VM with
+    # further memory decrease commands until the VM fully settles in.
     #
     # 20 seconds is a safe bet, but we can use 10 seconds since we decrease memory gently, by 10% tops, which is fast.
     @back_off_seconds = 10
@@ -121,6 +121,8 @@ class BallooningVM
       return
     end
 
+    # Check whether we already did some action (mem increase/decrease) on
+    # this VM data.
     if @last_update_at == mem_stat.last_updated
       @status = Status.new('no new data', 0)
       return
@@ -130,14 +132,18 @@ class BallooningVM
     percent_used = mem_stat.guest_mem.percent_used
     used_mem = mem_stat.guest_mem.used
 
-    # 0..100
+    # delta percent by which we'll modify the memory available to the VM.
+    # -10% means we'll decrease by 10%, +30% will increase by 30%.
     memory_delta = 0
 
     if percent_used >= @trigger_increase_at
-      # Increase memory immediately
+      # VM needs memory. Increase memory immediately: sometimes there's an instant
+      # memory demand spike in the VM, and since the data sampling occurs once every
+      # 2 seconds at best, we may be already late and SWAP is ramping up already.
+      # Increaase the memory immediately, and by a bigger number.
       memory_delta = @increase_memory_by
     elsif percent_used <= @trigger_decrease_at
-      # decrease memory if not in back_off period
+      # decrease memory slowly. We use back_off period to slow down memory decrease.
       if backing_off?
         @status = Status.new(
           "only #{percent_used}% memory used, but backing off for #{(@back_off_until - Time.now).round(1)}s", 0
