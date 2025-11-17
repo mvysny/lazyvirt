@@ -37,8 +37,8 @@ class Window
 
   # Sets the new auto_scroll. If true, immediately scrolls to the bottom.
   # @param new_auto_scroll [Boolean] if true, keep scrolled to the bottom.
-  def auto_scroll=(_new_auto_scroll)
-    @auto_scroll = auto_scroll
+  def auto_scroll=(new_auto_scroll)
+    @auto_scroll = new_auto_scroll
     update_top_line_if_auto_scroll
   end
 

@@ -13,6 +13,8 @@ class TestWindow < Minitest::Test
     w.content do
       %w[a b c]
     end
+    w.auto_scroll = true
+    assert w.auto_scroll
   end
 end
 
