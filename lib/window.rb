@@ -14,6 +14,9 @@ class Rect < Data.define(:left, :top, :width, :height)
 end
 
 # A very simple textual window. Doesn't support overlapping with other windows.
+# The content is a list of lines painted into the window. The lines are automatically
+# clipped both vertically and horizontally so that the text contents won't overflow
+# the window.
 class Window
   def initialize(caption = '')
     # {Rect} absolute coordinates of the window.
