@@ -16,20 +16,45 @@ end
 # A very simple textual window. Doesn't support overlapping with other windows.
 class Window
   def initialize(caption = '')
+    # {Rect} absolute coordinates of the window.
     @rect = Rect.new(0, 0, 0, 0)
+    # Window caption, shown in the upper-left part
     @caption = caption
+    # Contents of the window.
     @lines = []
+    # {Boolean} if true and a line is added or a new content is set, auto-scrolls to the bottom
     @auto_scroll = false
+    # {Pastel} draw colors
     @p = Pastel.new
+    # [Integer] zero or positive: top line to paint.
+    @top_line = 0
   end
 
-  attr_reader :caption, :rect, :p
+  attr_reader :caption, :rect, :p, :auto_scroll, :top_line
+
+  # Sets the new auto_scroll. If true, immediately scrolls to the bottom.
+  # @param new_auto_scroll [Boolean] if true, keep scrolled to the bottom.
+  def auto_scroll=(new_auto_scroll)
+    @auto_scroll = auto_scroll
+    update_top_line_if_auto_scroll
+  end
 
   # Sets new caption and repaints the window
   # @param new_caption [String | nil]
   def caption=(new_caption)
     @caption = new_caption
     repaint
+  end
+
+  # Scrolls the window contents by setting the new top line
+  # @new_top_line [Integer] 0 or greater
+  def top_line=(new_top_line)
+    raise 'Not an Integer' unless new_top_line.is_a? Integer
+    raise "#{new_top_line} must not be negative" if new_top_line.negative?
+    return unless @top_line != new_top_line
+
+    @top_line = new_top_line
+    repaint_content
   end
 
   # Sets new position of the window.
@@ -50,13 +75,49 @@ class Window
     repaint_content
   end
 
+  # Fully re-populates the contents of this window in a block:
+  # ```
+  # window.content do |lines|
+  #   lines << 'Hello!'
+  # end
+  # ````
   def content
     lines = []
     yield lines
     self.content = lines
   end
 
-  private def repaint
+  # Adds a line to the list of lines.
+  # @oaram line [String]
+  def add_line(line)
+    add_lines [line]
+  end
+
+  # Appends given lines.
+  # @param lines [Array<String>]
+  def add_lines(lines)
+    @lines += lines
+    # TODO: optimize
+    repaint_content unless update_top_line_if_auto_scroll
+  end
+
+  private
+
+  # If auto-scrolling, recalculate the top line and optionally repaint content
+  # if top line changed.
+  # @return [Boolean] true if the content was repainted.
+  def update_top_line_if_auto_scroll
+    return false unless @auto_scroll
+
+    new_top_line = (@lines.size - rect.width).clamp(0, nil)
+    return false unless @top_line != new_top_line
+
+    self.top_line = new_top_line
+    true
+  end
+
+  # Fully repaints the window: both frame and Contents
+  def repaint
     return if @rect.empty? || @rect.top.negative? || @rect.left.negative?
 
     print TTY::Box.frame(
@@ -66,19 +127,18 @@ class Window
     repaint_content
   end
 
-  private
-
   def repaint_content
     return if @rect.empty? || @rect.top.negative? || @rect.left.negative?
 
     width = @rect.width - 4 # 1 character for window frame, 1 character for padding
 
     (0..(@rect.height - 3)).each do |line_no|
-      line = (@lines[line_no] || '').to_s
-      truncated_line = Strings::Truncation.truncate(line, omission: '', length: width)
+      line = (@lines[@top_line + line_no] || '').to_s
+      truncated_line = Strings::Truncation.truncate(line, length: width)
 
       if truncated_line == line
-        # nothing was truncated, perhaps we need to add whitespaces.
+        # nothing was truncated, perhaps we need to add whitespaces,
+        # to repaint over old content.
         # strip the formatting before counting printable characters
         length = Unicode::DisplayWidth.of(@p.strip(line))
         line += ' ' * (width - length) if length < width
@@ -96,8 +156,8 @@ end
 class LogWindow < Window
   def initialize
     super('Log')
-    @log_lines = []
     self.log_level = 'W'
+    self.auto_scroll = true
   end
 
   # @param new_log_level [String] one of 'D', 'I', 'W', 'E'.
@@ -133,25 +193,15 @@ class LogWindow < Window
     log 'D', text, exception if debug_enabled?
   end
 
-  private def ellipsize(str, max_length)
-    str.length <= max_length ? str : "#{str[0...(max_length - 2)]}.."
-  end
+  private
 
-  private def log(level, text, exception)
+  def log(level, text, exception)
     text = "#{Time.now.strftime('%H:%M:%S')} #{level} #{text}"
     text_lines = text.lines(chomp: true)
     unless exception.nil?
       text_lines << exception.message
       text_lines += exception.backtrace.first(3) unless exception.backtrace.nil?
     end
-    @log_lines += text_lines
-    @log_lines = @log_lines.last((rect.height - 2).clamp(0..100))
-    content_width = rect.width - 4
-    if content_width.negative?
-      self.content = []
-    else
-      @log_lines.map! { |it| ellipsize(it, content_width) }
-      self.content = @log_lines
-    end
+    add_lines text_lines
   end
 end
