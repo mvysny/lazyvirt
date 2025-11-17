@@ -112,17 +112,18 @@ class BallooningVM
     end
 
     @was_running = true
-    if @last_update_at == mem_stat.last_updated
-      @status = Status.new('no new data', 0)
-      return
-    end
-    @last_update_at = mem_stat.last_updated
 
     # If the VM has no support for ballooning, do nothing
     unless mem_stat.guest_data_available?
       @status = Status.new('ballooning unsupported by the VM', 0)
       return
     end
+
+    if @last_update_at == mem_stat.last_updated
+      @status = Status.new('no new data', 0)
+      return
+    end
+    @last_update_at = mem_stat.last_updated
 
     # 0..100
     percent_used = mem_stat.guest_mem.percent_used
