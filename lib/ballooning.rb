@@ -58,7 +58,7 @@ class BallooningVM
     @back_off_seconds = 10
 
     # It takes ~15 seconds for a VM to start.
-    @boot_back_off_seconds = 15
+    @boot_back_off_seconds = 20
 
     # When the guest mem usage (ommitting cache) is above this value, increase guest memory
     @trigger_increase_at = 65
