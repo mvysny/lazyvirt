@@ -79,12 +79,14 @@ class BallooningVM
     # {Boolean} if the VM was running during the last ballooning update
     @was_running = false
 
-    # {Integer | nil} the value of {MemStat.last_updated} or nil
+    # {Integer | nil} the value of {MemStat.last_updated} or nil.
+    # This is the last date of the data upon which a decision was made.
     @last_update_at = nil
   end
 
   # - `text` [String] textual representation of the change, useful for debug purposes.
-  # - `memory_delta` [Integer] no change applied to memory if zero; memory increased if positive; memory decreased if negative.
+  # - `memory_delta` [Integer] no change applied to memory if zero; memory increased if positive; memory decreased if
+  #    negative.
   class Status < Data.define(:text, :memory_delta)
     def to_s
       "#{text}; d=#{memory_delta}"
@@ -123,7 +125,6 @@ class BallooningVM
       @status = Status.new('no new data', 0)
       return
     end
-    @last_update_at = mem_stat.last_updated
 
     # 0..100
     percent_used = mem_stat.guest_mem.percent_used
@@ -184,6 +185,7 @@ class BallooningVM
       "VM reports #{format_byte_size(used_mem)} (#{percent_used}%), updating actual by #{memory_delta}% to #{format_byte_size(new_actual)}", memory_delta
     )
     @virt_cache.set_actual(@vmid, new_actual)
+    @last_update_at = mem_stat.last_updated
   end
 
   private
