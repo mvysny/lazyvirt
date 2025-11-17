@@ -137,7 +137,9 @@ class BallooningVM
     elsif percent_used <= @trigger_decrease_at
       # decrease memory if not in back_off period
       if backing_off?
-        @status = Status.new("only #{percent_used}% memory used, but backing off at the moment", 0)
+        @status = Status.new(
+          "only #{percent_used}% memory used, but backing off for #{(@back_off_until - Time.now).round(1)}s", 0
+        )
         return
       end
       memory_delta = -@decrease_memory_by

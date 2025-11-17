@@ -129,8 +129,7 @@ class Screen
     @system = SystemWindow.new(virt_cache)
     @vms = VMWindow.new(virt_cache, ballooning)
     @log = LogWindow.new
-    $log.remove_handler :console
-    $log.add_handler [:console, { output: LogWindow::IO.new(@log), enable_color: true }]
+    @log.configure_logger $log
   end
 
   # Clears the TTY screen

@@ -164,6 +164,12 @@ class LogWindow < Window
     self.auto_scroll = true
   end
 
+  # @param logger [TTY::Logger]
+  def configure_logger(logger)
+    logger.remove_handler :console
+    logger.add_handler [:console, { output: LogWindow::IO.new(self), enable_color: true }]
+  end
+
   class IO
     def initialize(window)
       @window = window

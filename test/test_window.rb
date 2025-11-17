@@ -2,6 +2,7 @@
 
 require 'minitest/autorun'
 require 'window'
+require 'tty-logger'
 
 class TestWindow < Minitest::Test
   def test_smoke
@@ -18,9 +19,11 @@ end
 class TestLogWindow < Minitest::Test
   def test_smoke
     w = LogWindow.new
-    w.error 'foo'
-    w.warning 'bar'
-    w.info 'foo'
-    w.debug 'quack'
+    log = TTY::Logger.new do |config|
+      config.level = :debug
+    end
+    w.configure_logger(log)
+    log.error 'foo'
+    log.warn 'bar'
   end
 end
