@@ -120,6 +120,7 @@ class VMWindow < Window
   end
 end
 
+# A screen, holding all windows.
 class Screen
   # @param virt_cache [VirtCache]
   # @param ballooning [Ballooning]
@@ -130,6 +131,7 @@ class Screen
     @vms = VMWindow.new(virt_cache, ballooning)
     @log = LogWindow.new
     @log.configure_logger $log
+    @p = Pastel.new
   end
 
   # Clears the TTY screen
@@ -143,9 +145,14 @@ class Screen
     clear
     sh, sw = TTY::Screen.size
     left_pane_w = sw / 2
+    sh -= 1 # make way for the status bar
     @system.rect = Rect.new(0, 0, left_pane_w, 6)
     @vms.rect = Rect.new(0, 6, left_pane_w, sh - 6)
     @log.rect = Rect.new(left_pane_w, 0, sw - left_pane_w, sh)
+
+    # print status bar
+    print TTY::Cursor.move_to(0, sh), ' ' * sw
+    print TTY::Cursor.move_to(0, sh), "Q #{@p.dim.white('quit')}"
   end
 
   def update_data
