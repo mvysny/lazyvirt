@@ -43,7 +43,7 @@ class SystemWindow < Window
       lines << "#{@cpu}; #{@p.bright_blue(host_cpu_usage)}% used"
       vm_cpu_usage = @virt_cache.total_vm_cpu_usage.round(2)
       pb = @f.progress_bar(20, 100, [[vm_cpu_usage.to_i, :magenta], [host_cpu_usage.to_i, :bright_blue]])
-      lines << "     [#{pb}] #{@p.bright_blue(vm_cpu_usage)}% used by VMs"
+      lines << "     [#{pb}] #{@p.magenta(vm_cpu_usage)}% used by VMs"
       lines << @f.format(@virt_cache.host_mem_stat)
 
       # Memory
