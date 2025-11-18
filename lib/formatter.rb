@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'pastel'
 require_relative 'virt'
 require_relative 'sysinfo'
@@ -106,13 +108,14 @@ class Formatter
       length = progressbar_char_length
       result += @p.lookup(color) + chars
     end
-    result + ' ' * (width - length) + (length > 0 ? @p.lookup(:reset) : '')
+    result + ' ' * (width - length) + (length.positive? ? @p.lookup(:reset) : '')
   end
 
   # Draws pretty progress bar as one row. Supports paiting multiple values into the same row.
   # @param width the width of the progress bar, in characters. The height is always 1.
   # @param max_value [Integer] the max value
-  # @param values [Array<Array<Integer, Symbol>>] maps value to the Pastel color to draw with, e.g. `:on_red` or `:on_bright_yellow`.
+  # @param values [Array<Array<Integer, Symbol>>] maps value to the Pastel color to draw with, e.g. `:on_red` or
+  #    `:on_bright_yellow`.
   # @param color [Symbol] format the remainder of `caption` with this color.
   # @param caption [String] show this text inside of the progress bar. Must contain no formatting.
   # @return [String] Pastel progress bar
@@ -147,7 +150,7 @@ end
 # @return [String] "1.0K", "23.8M", "8.0G" and such
 def format_byte_size(bytes)
   return '0' if bytes.zero?
-  return '-' + format_byte_size(-bytes) if bytes.negative?
+  return "-#{format_byte_size(-bytes)}" if bytes.negative?
 
   units = ['', 'K', 'M', 'G', 'T', 'P']
 
@@ -158,11 +161,6 @@ def format_byte_size(bytes)
   value = bytes.to_f / (1024**exp)
 
   # Show one decimal if it's not a whole number, otherwise none
-  formatted = if value >= 10 || value.truncate == value
-                value.round.to_s
-              else
-                value.round(1)
-              end
-
-  "#{formatted}#{units[exp]}".strip
+  decimals = value >= 10 || value.round == value ? 0 : 1
+  "#{value.round(decimals)}#{units[exp]}"
 end
