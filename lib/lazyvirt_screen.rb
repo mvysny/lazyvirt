@@ -44,6 +44,12 @@ end
 
 # Shows a quick overview of all VMs
 class VMWindow < Window
+  # - `owner_line` {Integer} for every line displayed in the window, this holds the index of the "owner line"
+  #   (the line which holds the VM name). This line gets selected.
+  # - `vm_name` {String} this line is related to this VM.
+  class LineData < Data.define(:owner_line, :vm_name)
+  end
+
   # @param virt_cache [VirtCache]
   # @param ballooning [Ballooning]
   def initialize(virt_cache, ballooning)
@@ -53,17 +59,16 @@ class VMWindow < Window
     @virt_cache = virt_cache
     # {Ballooning}
     @ballooning = ballooning
-    # {Array<Integer>} for every line displayed in the window, this holds the index of the "owner line"
-    # (the line which holds the VM name). This line gets selected.
-    @owner_lines = []
-    self.selection = VMSelection.new(@owner_lines)
+    # {Array<LineData>} data for every line.
+    @line_data = []
+    self.selection = VMSelection.new(@line_data)
     update
   end
 
   class VMSelection < Selection::Single
-    def initialize(owner_lines)
+    def initialize(line_data)
       super(index: 0)
-      @owner_lines = owner_lines
+      @line_data = line_data
     end
 
     protected
@@ -71,19 +76,19 @@ class VMWindow < Window
     def go_up
       return false if @selected <= 0
 
-      owner_line = @owner_lines[@selected]
+      owner_line = @line_data[@selected].owner_line
       return false if owner_line <= 0
 
-      @selected = @owner_lines[owner_line - 1]
+      @selected = @line_data[owner_line - 1].owner_line
       true
     end
 
     def go_down(line_count)
-      current_owner_line = @owner_lines[@selected]
-      next_owner_line = @owner_lines[(@selected + 1)..].find { it != current_owner_line }
-      return false if next_owner_line.nil?
+      current_data = @line_data[@selected]
+      next_vm = @line_data[(@selected + 1)..].find { it.vm_name != current_data.vm_name }
+      return false if next_vm.nil?
 
-      @selected = next_owner_line
+      @selected = next_vm.owner_line
       true
     end
   end
@@ -91,32 +96,54 @@ class VMWindow < Window
   def update
     domains = @virt_cache.domains.sort # Array<String>
     content do |lines|
-      @owner_lines.clear
+      @line_data.clear
       domains.each do |domain_name|
-        owner_line = lines.size
+        line_data = LineData.new(lines.size, domain_name)
         cache = @virt_cache.cache(domain_name)
         data = cache.data
         lines << format_vm_overview_line(cache)
-        @owner_lines << owner_line
+        @line_data << line_data
 
         if data.running?
           cpu_usage = @virt_cache.cache(domain_name).guest_cpu_usage.round(2)
           guest_mem_usage = cache.data.mem_stat.guest_mem
           lines << "    #{Rainbow('Guest CPU').bright.blue}: [#{@f.progress_bar(20, 100,
                                                                                 [[cpu_usage.to_i, :dodgerblue]])}] #{Rainbow(cpu_usage).bright.blue}%; #{data.info.cpus} #cpus"
-          @owner_lines << owner_line
+          @line_data << line_data
           unless guest_mem_usage.nil?
             lines << "    #{Rainbow('Guest RAM').bright.red}: [#{@f.progress_bar(20, guest_mem_usage.total,
                                                                                  [[guest_mem_usage.used, :crimson]])}] #{@f.format(guest_mem_usage)}"
-            @owner_lines << owner_line
+            @line_data << line_data
           end
         end
         data.disk_stat.each do |ds|
           lines << '    ' + @f.format(ds)
-          @owner_lines << owner_line
+          @line_data << line_data
         end
       end
     end
+  end
+
+  def handle_key(key)
+    super(key)
+
+    current_vm = @line_data[selection.selected]&.vm_name
+    return if current_vm.nil?
+
+    state = @virt_cache.state(current_vm)
+
+    return unless key == 's'
+
+    if state == :shut_off
+      @virt_cache.virt.start(current_vm)
+      $log.warn "'#{current_vm}' started"
+    else
+      $log.error "'#{current_vm}' must be stopped"
+    end
+  end
+
+  def keyboard_hint
+    "s #{Rainbow('start').cadetblue}  S #{Rainbow('stop').cadetblue}  r #{Rainbow('reset').cadetblue}  R #{Rainbow('reboot').cadetblue}  P #{Rainbow('pause').cadetblue}  p #{Rainbow('unpause').cadetblue}"
   end
 
   private
@@ -180,7 +207,7 @@ class Screen
 
     # print status bar
     print TTY::Cursor.move_to(0, sh), ' ' * sw
-    print TTY::Cursor.move_to(0, sh), "Q #{Rainbow('quit').cadetblue}"
+    print TTY::Cursor.move_to(0, sh), "Q #{Rainbow('quit').cadetblue}  ", active_window.keyboard_hint
   end
 
   def update_data
