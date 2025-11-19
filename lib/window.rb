@@ -29,8 +29,8 @@ class Window
     @auto_scroll = false
     # {Integer} zero or positive: top line to paint.
     @top_line = 0
-    # {Integer} 0-based index of selected line; -1 if nothing is selected.
-    @selected = -1
+    # {Selection} selection
+    @selection = Selection::None.new
   end
 
   attr_reader :caption, :rect, :p, :auto_scroll, :top_line
@@ -107,6 +107,11 @@ class Window
     repaint_content unless update_top_line_if_auto_scroll
   end
 
+  # Called when a character is pressed on the keyboard
+  def handle_key(key)
+    repaint_content if @selection.handle_key(key, @lines.size)
+  end
+
   private
 
   # If auto-scrolling, recalculate the top line and optionally repaint content
@@ -154,11 +159,54 @@ class Window
       end
 
       print TTY::Cursor.move_to(@rect.left + 2, line_no + @rect.top + 1)
-      is_selected = @selected >= 0 && @selected == line_index && @selected < @lines.size
+      is_selected = line_index < @lines.size && @selection.selected?(line_index)
       if is_selected
         print Rainbow(line).bg(:darkslategray)
       else
         print line
+      end
+    end
+  end
+
+  # Has one method, {:handle_key} which accepts {String} key and returns true if selection
+  # changed and Window needs to repaint.
+  class Selection
+    # No selection.
+    class None < Selection
+      def handle_key(key, line_count)
+        false
+      end
+
+      def selected?(index)
+        false
+      end
+    end
+
+    # Single line is selected.
+    class Single
+      # @param index [Integer] the initial selection
+      def initialize(index: 0)
+        # {Integer} 0-based index of selected line
+        @selected = index
+      end
+
+      def handle_key(key, line_count)
+        if ["\e[B", 'k'].include?(key) # down arrow
+          return false if @selected >= line_count - 1
+
+          @selected += 1
+          return true
+        elsif ["\e[A", 'j'].include?(key) # up arrow
+          return false if @selected <= 0
+
+          @selected -= 1
+          return true
+        end
+        false
+      end
+
+      def selected?(index)
+        @selected == index
       end
     end
   end
