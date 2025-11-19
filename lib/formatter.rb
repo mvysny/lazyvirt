@@ -8,7 +8,7 @@ require_relative 'sysinfo'
 class Formatter
   # Pretty-formats given object
   # @param what the object to format
-  # @return [String] a Pastel-formatted object
+  # @return [String] a Rainbow-formatted object
   def format(what)
     case what
     when CpuInfo

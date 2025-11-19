@@ -2,7 +2,7 @@
 
 require 'tty-box'
 require 'tty-cursor'
-require 'pastel'
+require 'rainbow'
 require 'unicode/display_width'
 require 'strings-truncation'
 
@@ -27,8 +27,6 @@ class Window
     @lines = []
     # {Boolean} if true and a line is added or a new content is set, auto-scrolls to the bottom
     @auto_scroll = false
-    # {Pastel} use this to draw colors
-    @p = Pastel.new
     # {Integer} zero or positive: top line to paint.
     @top_line = 0
   end
@@ -146,7 +144,7 @@ class Window
         # nothing was truncated, perhaps we need to add whitespaces,
         # to repaint over old content.
         # strip the formatting before counting printable characters
-        length = Unicode::DisplayWidth.of(@p.strip(line))
+        length = Unicode::DisplayWidth.of(Rainbow.uncolor(line))
         line += ' ' * (width - length) if length < width
       else
         line = truncated_line

@@ -81,7 +81,7 @@ class VMWindow < Window
           cpu_usage = @virt_cache.cache(domain_name).guest_cpu_usage.round(2)
           guest_mem_usage = cache.data.mem_stat.guest_mem
           lines << "    #{Rainbow('Guest CPU').bright.blue}: [#{@f.progress_bar(20, 100,
-                                                                                [[cpu_usage.to_i, :dodgerblue]])}] #{@p.bright_blue(cpu_usage)}%; #{data.info.cpus} #cpus"
+                                                                                [[cpu_usage.to_i, :dodgerblue]])}] #{Rainbow(cpu_usage).bright.blue}%; #{data.info.cpus} #cpus"
           unless guest_mem_usage.nil?
             lines << "    #{Rainbow('Guest RAM').bright.red}: [#{@f.progress_bar(20, guest_mem_usage.total,
                                                                                  [[guest_mem_usage.used, :crimson]])}] #{@f.format(guest_mem_usage)}"
@@ -115,7 +115,7 @@ class VMWindow < Window
         end
       end
       line += " \u{1F422}" if cache.stale?
-      line += "   #{@p.bright_red('Host RSS RAM')}: #{@f.format(memstat.host_mem)}"
+      line += "   #{Rainbow('Host RSS RAM').bright.red}: #{@f.format(memstat.host_mem)}"
     end
     line
   end
