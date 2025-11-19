@@ -35,7 +35,7 @@ class Window
     @active = false
   end
 
-  attr_reader :caption, :rect, :p, :auto_scroll, :top_line
+  attr_reader :caption, :rect, :p, :auto_scroll, :top_line, :selection
 
   # Sets the new auto_scroll. If true, immediately scrolls to the bottom.
   # @param new_auto_scroll [Boolean] if true, keep scrolled to the bottom.
@@ -137,6 +137,11 @@ class Window
     repaint_content if @selection.handle_key(key, @lines.size)
   end
 
+  # @return [String] formatted keyboard hint for users. Empty by default.
+  def keyboard_hint
+    ''
+  end
+
   private
 
   # If auto-scrolling, recalculate the top line and optionally repaint content
@@ -220,6 +225,8 @@ class Window
         # {Integer} 0-based index of selected line
         @selected = index
       end
+
+      attr_reader :selected
 
       def handle_key(key, line_count)
         if ["\e[B", 'j'].include?(key) # down arrow
