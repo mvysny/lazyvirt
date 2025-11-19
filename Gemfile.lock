@@ -11,6 +11,7 @@ GEM
     pastel (0.8.0)
       tty-color (~> 0.5)
     raabro (1.4.0)
+    rainbow (3.1.1)
     rake (13.3.1)
     rufus-scheduler (3.9.2)
       fugit (~> 1.1, >= 1.11.1)
@@ -45,6 +46,7 @@ PLATFORMS
 DEPENDENCIES
   minitest (~> 5.26.0)
   pastel
+  rainbow (~> 3.1.0)
   rake (~> 13.2)
   rufus-scheduler
   strings-truncation

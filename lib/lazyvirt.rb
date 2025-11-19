@@ -12,6 +12,7 @@ require_relative 'formatter'
 require_relative 'ballooning'
 require_relative 'vm_emulator'
 require 'tty-logger'
+require 'rainbow'
 
 # https://github.com/piotrmurach/tty-logger
 $log = TTY::Logger.new do |config|
@@ -40,10 +41,10 @@ class SystemWindow < Window
     content do |lines|
       # CPU
       host_cpu_usage = @virt_cache.host_cpu_usage
-      lines << "#{@cpu}; #{@p.bright_blue(host_cpu_usage)}% used"
+      lines << "#{@cpu}; #{Rainbow(host_cpu_usage).blue.bright}% used"
       vm_cpu_usage = @virt_cache.total_vm_cpu_usage.round(2)
       pb = @f.progress_bar(20, 100, [[vm_cpu_usage.to_i, :magenta], [host_cpu_usage.to_i, :bright_blue]])
-      lines << "     [#{pb}] #{@p.magenta(vm_cpu_usage)}% used by VMs"
+      lines << "     [#{pb}] #{Rainbow(vm_cpu_usage).magenta}% used by VMs"
       lines << @f.format(@virt_cache.host_mem_stat)
 
       # Memory
