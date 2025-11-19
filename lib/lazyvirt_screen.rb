@@ -175,6 +175,7 @@ class Screen
     sh -= 1 # make way for the status bar
     @system.set_rect_and_repaint(Rect.new(0, 0, left_pane_w, 6))
     @vms.set_rect_and_repaint(Rect.new(0, 6, left_pane_w, sh - 6))
+    @vms.active = true
     @log.set_rect_and_repaint(Rect.new(left_pane_w, 0, sw - left_pane_w, sh))
 
     # print status bar
@@ -189,6 +190,12 @@ class Screen
 
   # Called when a character is pressed on keyboard.
   def handle_key(key)
-    @vms.handle_key(key)
+    active_window.handle_key(key)
+  end
+
+  private
+
+  def active_window
+    [@system, @vms, @log].find(&:active?)
   end
 end

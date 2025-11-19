@@ -31,6 +31,8 @@ class Window
     @top_line = 0
     # {Selection} selection
     @selection = Selection::None.new
+    # {Boolean} true if window is active
+    @active = false
   end
 
   attr_reader :caption, :rect, :p, :auto_scroll, :top_line
@@ -65,6 +67,15 @@ class Window
 
     @top_line = new_top_line
     repaint_content
+  end
+
+  def active?
+    @active
+  end
+
+  def active=(active)
+    @active = active
+    repaint_border
   end
 
   # Sets new position of the window.
@@ -145,11 +156,17 @@ class Window
   def repaint
     return if @rect.empty? || @rect.top.negative? || @rect.left.negative?
 
-    print TTY::Box.frame(
+    repaint_border
+    repaint_content
+  end
+
+  def repaint_border
+    frame = TTY::Box.frame(
       width: @rect.width, height: @rect.height, top: @rect.top, left: @rect.left,
       title: { top_left: @caption || '' }
     )
-    repaint_content
+    frame = Rainbow(frame).green if @active
+    print frame
   end
 
   def repaint_content
