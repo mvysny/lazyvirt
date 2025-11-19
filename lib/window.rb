@@ -29,6 +29,8 @@ class Window
     @auto_scroll = false
     # {Integer} zero or positive: top line to paint.
     @top_line = 0
+    # {Integer} 0-based index of selected line; -1 if nothing is selected.
+    @selected = -1
   end
 
   attr_reader :caption, :rect, :p, :auto_scroll, :top_line
@@ -137,7 +139,8 @@ class Window
     width = @rect.width - 4 # 1 character for window frame, 1 character for padding
 
     (0..(@rect.height - 3)).each do |line_no|
-      line = (@lines[@top_line + line_no] || '').to_s
+      line_index = line_no + @top_line
+      line = (@lines[line_index] || '').to_s
       truncated_line = Strings::Truncation.truncate(line, length: width)
 
       if truncated_line == line
@@ -150,7 +153,13 @@ class Window
         line = truncated_line
       end
 
-      print TTY::Cursor.move_to(@rect.left + 2, line_no + @rect.top + 1), line
+      print TTY::Cursor.move_to(@rect.left + 2, line_no + @rect.top + 1)
+      is_selected = @selected >= 0 && @selected == line_index && @selected < @lines.size
+      if is_selected
+        print Rainbow(line).bg(:darkslategray)
+      else
+        print line
+      end
     end
   end
 end
