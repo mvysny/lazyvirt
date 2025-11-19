@@ -14,7 +14,6 @@ require_relative 'lazyvirt_screen'
 $log = TTY::Logger.new do |config|
   config.level = :warn
 end
-scheduler = Rufus::Scheduler.new
 
 # Don't use LibVirtClient for now: it doesn't provide all necessary data
 # virt = LibVirtClient.new
@@ -33,19 +32,20 @@ rescue StandardError => e
   $log.fatal('Failed to update window sizes', e)
 end
 
-# https://github.com/jmettraux/rufus-scheduler
-scheduler.every '2s' do
-  virt_cache.update
-  # Needs to go after virt_cache.update so that it reads up-to-date values
-  ballooning.update
-  # Needs to go last, to correctly update current ballooning status
-  screen.update_data
-rescue StandardError => e
-  $log.fatal('Failed to update VM data', e)
-end
-
-# event loop, captures keyboard keys and sends them to Screen
+scheduler = Rufus::Scheduler.new
 begin
+  # https://github.com/jmettraux/rufus-scheduler
+  scheduler.every '2s' do
+    virt_cache.update
+    # Needs to go after virt_cache.update so that it reads up-to-date values
+    ballooning.update
+    # Needs to go last, to correctly update current ballooning status
+    screen.update_data
+  rescue StandardError => e
+    $log.fatal('Failed to update VM data', e)
+  end
+
+  # event loop, captures keyboard keys and sends them to Screen
   event_loop do |key|
     screen.handle_key key
   end
