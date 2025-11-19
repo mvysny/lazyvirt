@@ -138,21 +138,21 @@ class VMWindow < Window
         $log.info "Starting '#{current_vm}'"
         @virt_cache.virt.start(current_vm)
       else
-        $log.error "'#{current_vm}' must be stopped"
+        $log.error "'#{current_vm}' is already running"
       end
     elsif key == 'S' # shutdown gracefully
       if state == :running
         $log.info "Shutting down '#{current_vm}' gracefully"
         @virt_cache.virt.shutdown(current_vm)
       else
-        $log.error "'#{current_vm}' must be running"
+        $log.error "'#{current_vm}' is not running"
       end
     elsif key == 'v' # view
       if state == :running
         $log.info "Launching viewer for '#{current_vm}'"
         async_run("virt-manager --connect qemu:///system --show-domain-console '#{current_vm}'")
       else
-        $log.error "'#{current_vm}' must be running"
+        $log.error "'#{current_vm}' is not running"
       end
     elsif key == 'r' # reset
       $log.error 'reset unimplemented'
@@ -168,7 +168,7 @@ class VMWindow < Window
   end
 
   def keyboard_hint
-    "s #{Rainbow('start').cadetblue}  S #{Rainbow('shutdown').cadetblue}  r #{Rainbow('reset').cadetblue}  R #{Rainbow('reboot').cadetblue}  P #{Rainbow('pause').cadetblue}  p #{Rainbow('unpause').cadetblue}"
+    "s #{Rainbow('start').cadetblue}  S #{Rainbow('shutdown').cadetblue}  v #{Rainbow('Run viewer').cadetblue}  r #{Rainbow('reset').cadetblue}  R #{Rainbow('reboot').cadetblue}  P #{Rainbow('pause').cadetblue}  p #{Rainbow('unpause').cadetblue}"
   end
 
   private
