@@ -134,13 +134,18 @@ class VMWindow < Window
 
     if key == 's' # start
       if state == :shut_off
+        $log.warn "Starting '#{current_vm}'"
         @virt_cache.virt.start(current_vm)
-        $log.warn "'#{current_vm}' started"
       else
         $log.error "'#{current_vm}' must be stopped"
       end
-    elsif key == 'S' # stop
-      $log.error 'stop unimplemented'
+    elsif key == 'S' # shutdown gracefully
+      if state == :running
+        $log.warn "Shutting down '#{current_vm}' gracefully"
+        @virt_cache.virt.shutdown(current_vm)
+      else
+        $log.error "'#{current_vm}' must be running"
+      end
     elsif key == 'r' # reset
       $log.error 'reset unimplemented'
     elsif key == 'R' # reboot
@@ -150,10 +155,12 @@ class VMWindow < Window
     elsif key == 'p' # unpause
       $log.error 'unpause unimplemented'
     end
+  rescue StandardError => e
+    $log.error('Command failed', e)
   end
 
   def keyboard_hint
-    "s #{Rainbow('start').cadetblue}  S #{Rainbow('stop').cadetblue}  r #{Rainbow('reset').cadetblue}  R #{Rainbow('reboot').cadetblue}  P #{Rainbow('pause').cadetblue}  p #{Rainbow('unpause').cadetblue}"
+    "s #{Rainbow('start').cadetblue}  S #{Rainbow('shutdown').cadetblue}  r #{Rainbow('reset').cadetblue}  R #{Rainbow('reboot').cadetblue}  P #{Rainbow('pause').cadetblue}  p #{Rainbow('unpause').cadetblue}"
   end
 
   private
