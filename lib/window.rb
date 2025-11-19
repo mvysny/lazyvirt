@@ -168,7 +168,7 @@ class Window
       print TTY::Cursor.move_to(@rect.left + 2, line_no + @rect.top + 1)
       is_selected = line_index < @lines.size && @selection.selected?(line_index)
       if is_selected
-        print Rainbow(line).bg(:darkslategray)
+        print Rainbow(Rainbow.uncolor(line)).bg(:darkslategray)
       else
         print line
       end
