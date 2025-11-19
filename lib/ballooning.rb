@@ -46,8 +46,8 @@ class BallooningVM
   def initialize(virt_cache, vmid)
     @virt_cache = virt_cache
     @vmid = vmid
-    # don't go below 1GB
-    @min_active = 1.GiB
+    # don't go below 2GB
+    @min_active = 2.GiB
     # After Ballooning decreases active memory, it will back off for 20 seconds
     # before trying to decrease the memory again. Observation shows that
     # the effects of the memory decrease command in Linux guest isn't instant: instead it is gradual, and takes
