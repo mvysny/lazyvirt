@@ -43,14 +43,14 @@ class SystemWindow < Window
       host_cpu_usage = @virt_cache.host_cpu_usage
       lines << "#{@cpu}; #{Rainbow(host_cpu_usage).blue.bright}% used"
       vm_cpu_usage = @virt_cache.total_vm_cpu_usage.round(2)
-      pb = @f.progress_bar(20, 100, [[vm_cpu_usage.to_i, :magenta], [host_cpu_usage.to_i, :bright_blue]])
+      pb = @f.progress_bar(20, 100, [[vm_cpu_usage.to_i, :magenta], [host_cpu_usage.to_i, :dodgerblue]])
       lines << "     [#{pb}] #{Rainbow(vm_cpu_usage).magenta}% used by VMs"
       lines << @f.format(@virt_cache.host_mem_stat)
 
       # Memory
       total_ram = @virt_cache.host_mem_stat.ram.total
       total_vm_rss_usage = @virt_cache.total_vm_rss_usage
-      ram_use = [[total_vm_rss_usage, :magenta], [@virt_cache.host_mem_stat.ram.used, :bright_red]]
+      ram_use = [[total_vm_rss_usage, :magenta], [@virt_cache.host_mem_stat.ram.used, :crimson]]
       pb = @f.progress_bar(20, total_ram, ram_use)
       lines << "     [#{pb}] #{Rainbow(format_byte_size(total_vm_rss_usage)).magenta} used by VMs"
     end
@@ -81,10 +81,10 @@ class VMWindow < Window
           cpu_usage = @virt_cache.cache(domain_name).guest_cpu_usage.round(2)
           guest_mem_usage = cache.data.mem_stat.guest_mem
           lines << "    #{Rainbow('Guest CPU').bright.blue}: [#{@f.progress_bar(20, 100,
-                                                                                [[cpu_usage.to_i, :bright_blue]])}] #{@p.bright_blue(cpu_usage)}%; #{data.info.cpus} #cpus"
+                                                                                [[cpu_usage.to_i, :dodgerblue]])}] #{@p.bright_blue(cpu_usage)}%; #{data.info.cpus} #cpus"
           unless guest_mem_usage.nil?
             lines << "    #{Rainbow('Guest RAM').bright.red}: [#{@f.progress_bar(20, guest_mem_usage.total,
-                                                                                 [[guest_mem_usage.used, :bright_red]])}] #{@f.format(guest_mem_usage)}"
+                                                                                 [[guest_mem_usage.used, :crimson]])}] #{@f.format(guest_mem_usage)}"
           end
         end
         data.disk_stat.each do |ds|

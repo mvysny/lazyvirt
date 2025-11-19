@@ -1,15 +1,11 @@
 # frozen_string_literal: true
 
-require 'pastel'
+require 'rainbow'
 require_relative 'virt'
 require_relative 'sysinfo'
 
 # Formats
 class Formatter
-  def initialize
-    @p = Pastel.new
-  end
-
   # Pretty-formats given object
   # @param what the object to format
   # @return [String] a Pastel-formatted object
@@ -32,27 +28,27 @@ class Formatter
 
   # @param cpu [CpuInfo]
   def format_cpu(cpu)
-    "#{@p.bright_blue('CPU')}: #{@p.bright_blue(cpu.model)}: #{@p.cyan(cpu.cpus)} cores"
+    "#{Rainbow('CPU').bright.blue}: #{Rainbow(cpu.model).bright.blue}: #{Rainbow(cpu.cpus).cyan} cores"
   end
 
   # @param memory_stat [MemoryStat]
   def format_memory_stat(memory_stat)
-    "#{@p.bright_red('RAM')}: #{format(memory_stat.ram)}; #{@p.bright_red('SWAP')}: #{format(memory_stat.swap)}"
+    "#{Rainbow('RAM').bright.red}: #{format(memory_stat.ram)}; #{Rainbow('SWAP').bright.red}: #{format(memory_stat.swap)}"
   end
 
   # @param memory_usage [MemoryUsage]
   def format_memory_usage(memory_usage)
-    r = "#{@p.cyan(format_byte_size(memory_usage.used))}/#{@p.cyan(format_byte_size(memory_usage.total))}"
-    r += " (#{@p.cyan(memory_usage.percent_used)}%)"
+    r = "#{Rainbow(format_byte_size(memory_usage.used)).cyan}/#{Rainbow(format_byte_size(memory_usage.total)).cyan}"
+    r += " (#{Rainbow(memory_usage.percent_used).cyan}%)"
     r
   end
 
   # @param state [Symbol] one of `:running`, `:shut_off`, `:paused`
   def format_domain_state(state)
-    running = @p.green("\u{25B6}")
-    paused = @p.yellow("\u{23F8}")
-    off    = @p.dim.red("\u{23F9}")
-    unknown = @p.red('?')
+    running = Rainbow("\u{25B6}").green
+    paused = Rainbow("\u{23F8}").yellow
+    off    = Rainbow("\u{23F9}").darkred
+    unknown = Rainbow('?').red
     case state
     when :running then running
     when :shut_off then off
@@ -74,14 +70,14 @@ class Formatter
     overhead = disk_stat.overhead_percent
     overhead_color = case overhead
                      when ..10
-                       :bright_green
+                       :green
                      when 10..20
-                       :bright_yellow
+                       :yellow
                      else
-                       :bright_red
+                       :red
                      end
-    line += " #{@p.bright_white(format_byte_size(disk_stat.allocation))}/#{@p.bright_white(format_byte_size(disk_stat.capacity))}"
-    line += ", host qcow2 #{@p.lookup(overhead_color)}#{overhead}#{@p.lookup(:reset)}%"
+    line += " #{Rainbow(format_byte_size(disk_stat.allocation)).white}/#{Rainbow(format_byte_size(disk_stat.capacity)).white}"
+    line += ", host qcow2 #{Rainbow(overhead).bright.color(overhead_color)}%"
     line
   end
 
@@ -95,7 +91,7 @@ class Formatter
     return '' if max_value.zero? || width.zero?
     return ' ' * width if values.empty?
 
-    values = values.sort_by { |value, _color| value }
+    values = values.sort_by { |value, _| value }
     result = ''
     length = 0
     values.each do |value, color|
@@ -106,42 +102,9 @@ class Formatter
 
       chars = char * (progressbar_char_length - length)
       length = progressbar_char_length
-      result += @p.lookup(color) + chars
+      result += Rainbow(chars).fg(color)
     end
-    result + ' ' * (width - length) + (length.positive? ? @p.lookup(:reset) : '')
-  end
-
-  # Draws pretty progress bar as one row. Supports paiting multiple values into the same row.
-  # @param width the width of the progress bar, in characters. The height is always 1.
-  # @param max_value [Integer] the max value
-  # @param values [Array<Array<Integer, Symbol>>] maps value to the Pastel color to draw with, e.g. `:on_red` or
-  #    `:on_bright_yellow`.
-  # @param color [Symbol] format the remainder of `caption` with this color.
-  # @param caption [String] show this text inside of the progress bar. Must contain no formatting.
-  # @return [String] Pastel progress bar
-  def progress_bar_inl(width, max_value, values, color, caption)
-    raise "#{max_value} must not be negative" if max_value.negative?
-    return '' if max_value.zero? || width.zero?
-
-    # make 'caption' exactly the 'width' characters long, padding it with spaces
-    caption = caption.ljust(width, ' ')[0...width]
-
-    values = values.sort_by { |value, _color| value }
-    values += [[max_value, [:reset, color]]]
-    result = @p.lookup(:black)
-    length = 0
-    values.each do |value, color|
-      next if value <= 0
-
-      progressbar_char_length = value.clamp(0, max_value) * width / max_value
-      next unless length < progressbar_char_length
-
-      chars = caption[length...progressbar_char_length]
-      length = progressbar_char_length
-
-      result += @p.lookup(*color) + chars
-    end
-    result + @p.lookup(:reset)
+    result + ' ' * (width - length)
   end
 end
 
