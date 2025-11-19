@@ -29,6 +29,8 @@ screen.calculate_window_sizes
 # Trap the WINCH signal (sent on terminal resize)
 trap('WINCH') do
   screen.calculate_window_sizes
+rescue StandardError => e
+  $log.fatal('Failed to update window sizes', e)
 end
 
 # https://github.com/jmettraux/rufus-scheduler
