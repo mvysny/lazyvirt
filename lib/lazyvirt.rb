@@ -64,36 +64,77 @@ class VMWindow < Window
   def initialize(virt_cache, ballooning)
     super('[1]-VMs')
     @f = Formatter.new
+    # {VirtCache}
     @virt_cache = virt_cache
+    # {Ballooning}
     @ballooning = ballooning
-    self.selection = Window::Selection::Single.new
+    # {Array<Integer>} for every line displayed in the window, this holds the index of the "owner line"
+    # (the line which holds the VM name). This line gets selected.
+    @owner_lines = []
+    self.selection = VMSelection.new(@owner_lines)
     update
+  end
+
+  class VMSelection < Selection::Single
+    def initialize(owner_lines)
+      super(index: 0)
+      @owner_lines = owner_lines
+    end
+
+    protected
+
+    def go_up
+      return false if @selected <= 0
+
+      owner_line = @owner_lines[@selected]
+      return false if owner_line <= 0
+
+      @selected = @owner_lines[owner_line - 1]
+      true
+    end
+
+    def go_down(line_count)
+      current_owner_line = @owner_lines[@selected]
+      next_owner_line = @owner_lines[(@selected + 1)..].find { it != current_owner_line }
+      return false if next_owner_line.nil?
+
+      @selected = next_owner_line
+      true
+    end
   end
 
   def update
     domains = @virt_cache.domains.sort # Array<String>
     content do |lines|
+      @owner_lines.clear
       domains.each do |domain_name|
+        owner_line = lines.size
         cache = @virt_cache.cache(domain_name)
         data = cache.data
         lines << format_vm_overview_line(cache)
+        @owner_lines << owner_line
 
         if data.running?
           cpu_usage = @virt_cache.cache(domain_name).guest_cpu_usage.round(2)
           guest_mem_usage = cache.data.mem_stat.guest_mem
           lines << "    #{Rainbow('Guest CPU').bright.blue}: [#{@f.progress_bar(20, 100,
                                                                                 [[cpu_usage.to_i, :dodgerblue]])}] #{Rainbow(cpu_usage).bright.blue}%; #{data.info.cpus} #cpus"
+          @owner_lines << owner_line
           unless guest_mem_usage.nil?
             lines << "    #{Rainbow('Guest RAM').bright.red}: [#{@f.progress_bar(20, guest_mem_usage.total,
                                                                                  [[guest_mem_usage.used, :crimson]])}] #{@f.format(guest_mem_usage)}"
+            @owner_lines << owner_line
           end
         end
         data.disk_stat.each do |ds|
           lines << '    ' + @f.format(ds)
+          @owner_lines << owner_line
         end
       end
     end
   end
+
+  private
 
   # @param cache [VirtCache::VMCache]
   # @return [String]

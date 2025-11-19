@@ -175,7 +175,7 @@ class Window
     end
   end
 
-  # Has one method, {:handle_key} which accepts {String} key and returns true if selection
+  # Has one method, {:handle_key} which accepts {String} key, {Integer} line count, and returns true if selection
   # changed and Window needs to repaint.
   class Selection
     # No selection.
@@ -199,21 +199,32 @@ class Window
 
       def handle_key(key, line_count)
         if ["\e[B", 'j'].include?(key) # down arrow
-          return false if @selected >= line_count - 1
-
-          @selected += 1
-          return true
+          return go_down(line_count)
         elsif ["\e[A", 'k'].include?(key) # up arrow
-          return false if @selected <= 0
-
-          @selected -= 1
-          return true
+          return go_up
         end
+
         false
       end
 
       def selected?(index)
         @selected == index
+      end
+
+      protected
+
+      def go_down(line_count)
+        return false if @selected >= line_count - 1
+
+        @selected += 1
+        true
+      end
+
+      def go_up
+        return false if @selected <= 0
+
+        @selected -= 1
+        true
       end
     end
   end
