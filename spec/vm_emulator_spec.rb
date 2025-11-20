@@ -99,7 +99,7 @@ describe VMEmulator::VM do
       vm.start
     end
     Timecop.freeze(now + 10) do
-      vm.memory_actual = 4 * 1024 * 1024 * 1024
+      vm.memory_actual = 4.GiB
       assert_equal 'actual 4G(rss=2.1G); guest: 1G/3.9G (25%) (unused=1.9G, disk_caches=1G)', vm.to_mem_stat.to_s
     end
   end
@@ -111,7 +111,7 @@ describe VMEmulator::VM do
       vm.start
     end
     Timecop.freeze(now + 10) do
-      vm.memory_actual = 1 * 1024 * 1024 * 1024
+      vm.memory_actual = 1.GiB
       assert_equal 'actual 2G(rss=2G); guest: 1G/1.9G (53%) (unused=0, disk_caches=896M)', vm.to_mem_stat.to_s
     end
     # actual slowly decreases over 5 seconds
@@ -146,7 +146,7 @@ describe VMEmulator do
   it 'test_set_active_on_running_vm' do
     e = VMEmulator.new
     e.add(VMEmulator::VM.simple('vm0')).start
-    e.set_actual 'vm0', 3 * 1024 * 1024 * 1024
-    assert_equal 3 * 1024 * 1024 * 1024, e.vm('vm0').to_mem_stat.actual
+    e.set_actual 'vm0', 3.GiB
+    assert_equal 3.GiB, e.vm('vm0').to_mem_stat.actual
   end
 end
