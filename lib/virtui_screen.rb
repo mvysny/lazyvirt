@@ -62,34 +62,35 @@ class VMWindow < Window
     @ballooning = ballooning
     # {Array<LineData>} data for every line.
     @line_data = []
-    self.selection = VMSelection.new(@line_data)
+    self.cursor = VMCursor.new(@line_data)
     update
   end
 
-  class VMSelection < Selection::Single
+  # A special cursor which hops over VMs, not lines.
+  class VMCursor < Cursor
     def initialize(line_data)
-      super(index: 0)
+      super(position: 0)
       @line_data = line_data
     end
 
     protected
 
     def go_up
-      return false if @selected <= 0
+      return false if @position <= 0
 
-      owner_line = @line_data[@selected].owner_line
+      owner_line = @line_data[@position].owner_line
       return false if owner_line <= 0
 
-      @selected = @line_data[owner_line - 1].owner_line
+      @position = @line_data[owner_line - 1].owner_line
       true
     end
 
     def go_down(_line_count)
-      current_data = @line_data[@selected]
-      next_vm = @line_data[(@selected + 1)..].find { it.vm_name != current_data.vm_name }
+      current_data = @line_data[@position]
+      next_vm = @line_data[(@position + 1)..].find { it.vm_name != current_data.vm_name }
       return false if next_vm.nil?
 
-      @selected = next_vm.owner_line
+      @position = next_vm.owner_line
       true
     end
   end
@@ -128,7 +129,7 @@ class VMWindow < Window
   def handle_key(key)
     super
 
-    current_vm = @line_data[selection.selected]&.vm_name
+    current_vm = @line_data[cursor.position]&.vm_name
     return if current_vm.nil?
 
     state = @virt_cache.state(current_vm)
@@ -166,8 +167,6 @@ class VMWindow < Window
     elsif key == 'p' # unpause
       $log.error 'unpause unimplemented'
     end
-  rescue StandardError => e
-    $log.error('Command failed', e)
   end
 
   def keyboard_hint

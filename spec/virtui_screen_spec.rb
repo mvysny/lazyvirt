@@ -32,33 +32,33 @@ describe VMWindow do
     assert_equal '    vda: [##########          ] 64G/128G, host qcow2 0.0%', content[11]
   end
 
-  context('cursor selection') do
+  context('cursor movement') do
     it 'moves cursor down correctly' do
-      assert_equal 0, window.selection.selected
+      assert_equal 0, window.cursor.position
       # first VM is stopped and takes 2 lines
       window.handle_key("\e[B")
-      assert_equal 2, window.selection.selected
+      assert_equal 2, window.cursor.position
       # second VM is running and takes 3 lines
       window.handle_key("\e[B")
-      assert_equal 4, window.selection.selected
+      assert_equal 4, window.cursor.position
       # third VM is running and takes 3 lines
       window.handle_key("\e[B")
-      assert_equal 8, window.selection.selected
+      assert_equal 8, window.cursor.position
       # no more VMs
       window.handle_key("\e[B")
-      assert_equal 8, window.selection.selected
+      assert_equal 8, window.cursor.position
     end
     it 'moves cursor up correctly' do
-      window.selection.selected = 8
-      assert_equal 8, window.selection.selected
+      window.cursor.position = 8
+      assert_equal 8, window.cursor.position
       window.handle_key("\e[A")
-      assert_equal 4, window.selection.selected
+      assert_equal 4, window.cursor.position
       window.handle_key("\e[A")
-      assert_equal 2, window.selection.selected
+      assert_equal 2, window.cursor.position
       window.handle_key("\e[A")
-      assert_equal 0, window.selection.selected
+      assert_equal 0, window.cursor.position
       window.handle_key("\e[A")
-      assert_equal 0, window.selection.selected
+      assert_equal 0, window.cursor.position
     end
   end
 end

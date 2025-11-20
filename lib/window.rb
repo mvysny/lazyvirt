@@ -29,13 +29,13 @@ class Window
     @auto_scroll = false
     # {Integer} zero or positive: top line to paint.
     @top_line = 0
-    # {Selection} selection
-    @selection = Selection::None.new
+    # {Cursor} cursor, none by default.
+    @cursor = Cursor::None.new
     # {Boolean} true if window is active
     @active = false
   end
 
-  attr_reader :caption, :rect, :p, :auto_scroll, :top_line, :selection
+  attr_reader :caption, :rect, :p, :auto_scroll, :top_line, :cursor
 
   # Sets the new auto_scroll. If true, immediately scrolls to the bottom.
   # @param new_auto_scroll [Boolean] if true, keep scrolled to the bottom.
@@ -51,10 +51,10 @@ class Window
     repaint
   end
 
-  def selection=(selection)
-    raise 'Not a Selection' unless selection.is_a? Selection
+  def cursor=(cursor)
+    raise 'Not a Cursor' unless cursor.is_a? Cursor
 
-    @selection = selection
+    @cursor = cursor
     repaint_content
   end
 
@@ -140,7 +140,7 @@ class Window
   def handle_key(key)
     return unless active?
 
-    repaint_content if @selection.handle_key(key, @lines.size)
+    repaint_content if @cursor.handle_key(key, @lines.size)
   end
 
   # @return [String] formatted keyboard hint for users. Empty by default.
@@ -205,8 +205,8 @@ class Window
       end
 
       print TTY::Cursor.move_to(@rect.left + 2, line_no + @rect.top + 1)
-      is_selected = line_index < @lines.size && @selection.selected?(line_index)
-      if is_selected
+      is_cursor = line_index < @lines.size && @cursor.position == line_index
+      if is_cursor
         print Rainbow(Rainbow.uncolor(line)).bg(:darkslategray)
       else
         print line
@@ -214,65 +214,64 @@ class Window
     end
   end
 
+  # Tracks window cursor as it hops over window content lines.
   # Has one method, {:handle_key} which accepts {String} key, {Integer} line count, and returns true if selection
   # changed and Window needs to repaint.
-  class Selection
-    # No selection.
-    class None < Selection
+  class Cursor
+    # @param position [Integer] the initial cursor position
+    def initialize(position: 0)
+      # {Integer} 0-based index of line
+      @position = position
+    end
+
+    # No cursor - cursor is disabled.
+    class None < Cursor
+      def initialize
+        super(position: -1)
+        freeze
+      end
+
       def handle_key(key, line_count)
         false
       end
 
-      def selected?(index)
-        false
+      def position=(position)
+        raise 'no cursor'
       end
     end
 
-    # Single line is selected.
-    class Single < Selection
-      # @param index [Integer] the initial selection
-      def initialize(index: 0)
-        # {Integer} 0-based index of selected line
-        @selected = index
+    attr_reader :position
+
+    def handle_key(key, line_count)
+      if ["\e[B", 'j'].include?(key) # down arrow
+        return go_down(line_count)
+      elsif ["\e[A", 'k'].include?(key) # up arrow
+        return go_up
       end
 
-      attr_reader :selected
+      false
+    end
 
-      def handle_key(key, line_count)
-        if ["\e[B", 'j'].include?(key) # down arrow
-          return go_down(line_count)
-        elsif ["\e[A", 'k'].include?(key) # up arrow
-          return go_up
-        end
+    def position=(position)
+      raise 'must be integer 0 or greater' if position.negative? || !position.is_a?(Integer)
 
-        false
-      end
+      @position = position
+    end
 
-      def selected?(index)
-        @selected == index
-      end
+    protected
 
-      def selected=(index)
-        raise 'must be integer 0 or greater' if index.negative? || !index.is_a?(Integer)
+    def go_down(line_count)
+      return false if @position >= line_count - 1
 
-        @selected = index
-      end
+      @position += 1
+      true
+    end
 
-      protected
+    def go_up
+      return false if @position <= 0
 
-      def go_down(line_count)
-        return false if @selected >= line_count - 1
-
-        @selected += 1
-        true
-      end
-
-      def go_up
-        return false if @selected <= 0
-
-        @selected -= 1
-        true
-      end
+      @position -= 1
+      true
     end
   end
 end
