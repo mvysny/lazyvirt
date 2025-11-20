@@ -113,7 +113,15 @@ class BallooningVM
     end
   end
 
-  attr_reader :status, :enabled?, :was_running?
+  attr_reader :status
+
+  def enabled?
+    @enabled
+  end
+
+  def was_running?
+    @was_running
+  end
 
   # Call every 2 seconds, to control the VM
   def update
