@@ -48,5 +48,17 @@ describe VMWindow do
       window.handle_key("\e[B")
       assert_equal 8, window.selection.selected
     end
+    it 'moves cursor up correctly' do
+      window.selection.selected = 8
+      assert_equal 8, window.selection.selected
+      window.handle_key("\e[A")
+      assert_equal 4, window.selection.selected
+      window.handle_key("\e[A")
+      assert_equal 2, window.selection.selected
+      window.handle_key("\e[A")
+      assert_equal 0, window.selection.selected
+      window.handle_key("\e[A")
+      assert_equal 0, window.selection.selected
+    end
   end
 end

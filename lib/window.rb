@@ -253,6 +253,12 @@ class Window
         @selected == index
       end
 
+      def selected=(index)
+        raise 'must be integer 0 or greater' if index.negative? || !index.is_a?(Integer)
+
+        @selected = index
+      end
+
       protected
 
       def go_down(line_count)
