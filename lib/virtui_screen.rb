@@ -95,9 +95,7 @@ class VMWindow < Window
 
   def handle_key(key)
     super
-
     current_vm = @line_data[cursor.position] || return
-
     state = @virt_cache.state(current_vm)
 
     if key == 's' # start
