@@ -149,6 +149,20 @@ describe Window::Cursor do
   end
 end
 
+describe Window::Cursor::None do
+  let(:c) { Window::Cursor::None.new }
+  it 'has default position of -1' do
+    assert_equal(-1, c.position)
+  end
+  it 'doesnt move' do
+    assert !c.handle_key('j', 20)
+    assert !c.handle_key('k', 20)
+  end
+  it 'cant move position' do
+    assert_raises(StandardError) { c.position = 1 }
+  end
+end
+
 describe Window::Cursor::Limited do
   let(:cursor) { Window::Cursor::Limited.new([0, 2, 4, 8]) }
   it 'moves cursor down correctly' do
