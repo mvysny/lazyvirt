@@ -8,7 +8,7 @@ require_relative 'vm_emulator'
 require 'tty-logger'
 require 'rainbow'
 require_relative 'event_loop'
-require_relative 'lazyvirt_screen'
+require_relative 'virtui_screen'
 
 # https://github.com/piotrmurach/tty-logger
 $log = TTY::Logger.new do |config|

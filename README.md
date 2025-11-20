@@ -1,4 +1,4 @@
-# LazyVirt
+# virtui
 
 A TUI client for libvirt/virsh. Under development. Requires Ruby 3.4+. Currently runs `virsh`.
 Currently only tested on Linux host: probably won't work on Windows nor MacOS.
@@ -17,7 +17,7 @@ $ bundle install
 
 If `bundle install` fails, try running `bundle config set --global path '~/.gem'`.
 
-- To use lazyvirt over `virsh` binary, run `sudo apt install libvirt-clients` (recommended)
+- To use virtui over `virsh` binary, run `sudo apt install libvirt-clients` (recommended)
 - To use direct connection to `libvirt` (experimental, broken at the moment), install the libvirt Ruby gem: `sudo apt install ruby-libvirt`
 - To give your user control over virtual machines, add your user to `libvirt` group:
   `sudo usermod -aG libvirt $USER` and log out/log in.
@@ -26,7 +26,7 @@ If `bundle install` fails, try running `bundle config set --global path '~/.gem'
 ## Running
 
 ```
-bin/lazyvirt
+bin/virtui
 ```
 
 Press `1` to focus the VM list. Select a VM using up/down arrows, then press:
@@ -49,11 +49,11 @@ When guest needs more memory, the balloon 'deflates': the 'balloon' program rele
 but this gives the guest OS more memory to work with.
 
 You can inflate and deflate the balloon as many times as you need. By default the balloon inflating and deflating is manual work:
-you run `virsh setmem` to control the balloon size. However, lazyvirt can do this automatically for you.
+you run `virsh setmem` to control the balloon size. However, virtui can do this automatically for you.
 
 ## Enabling Ballooning
 
-Without ballooning properly enabled in your guest OS, lazyvirt can't control the amount of memory
+Without ballooning properly enabled in your guest OS, virtui can't control the amount of memory
 available to the guest OS. To enable ballooning:
 
 - Make sure your VM libvirt xml file contains the `<memballoon>` device (it does by default when you create VMs via `virt-manager`)
@@ -63,7 +63,7 @@ available to the guest OS. To enable ballooning:
     but it's always active so `modprobe virtio_balloon` isn't necessary.
   - Windows: Download and install `virtio-win-guest-tools.exe` from [windows virtio repo](https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/?C=M;O=D).
 
-If the memory data doesn't seem to be updated in lazyvirt:
+If the memory data doesn't seem to be updated in virtui:
 
 - Either make sure your VM libvirt xml `<memballoon>` device contains the `<stats period='3' /> ` child element, OR
 - in the Virtual Machine Manager (`sudo apt install virt-manager`) preferences, polling, make sure "Poll Memory stats" is checked.
@@ -72,9 +72,9 @@ If the memory data doesn't seem to be updated in lazyvirt:
 **Note:** refresh each 3 seconds may seem excessive, but this way Ballooning will have access to the most fresh data,
 and can quickly ramp up RAM when it's needed. Actually, regardless of the setting, `virsh` refreshes the data once every 5 seconds anyway.
 
-When ballooning is enabled properly in a VM, 🎈 is shown next to the VM name in lazyvirt. If the balloon data is stale (not being refreshed), 🐢 is shown.
+When ballooning is enabled properly in a VM, 🎈 is shown next to the VM name in virtui. If the balloon data is stale (not being refreshed), 🐢 is shown.
 
-When lazyvirt controls the app memory, an arrow is shown next to 🎈: up arrow indicates a memory increase,
+When virtui controls the app memory, an arrow is shown next to 🎈: up arrow indicates a memory increase,
 down arrow indicates memory decrease, and a flat dash `-` indicates no change.
 
 More info at [VirtIO Memory Ballooning](https://pmhahn.github.io/virtio-balloon/).
@@ -89,7 +89,7 @@ In other words, if VM needs memory, the memory is given immediately. Afterwards,
 
 At the moment this can not be disabled - I'm working on making this controllable via a keyboard.
 
-At the moment you need to edit LazyVirt sources to configure this: edit `ballooning.rb`: the configuration starts at line 49.
+At the moment you need to edit virtui sources to configure this: edit `ballooning.rb`: the configuration starts at line 49.
 
 # Developing
 
