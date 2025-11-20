@@ -2,7 +2,8 @@
 
 require_relative 'byte_prefixes'
 
-# Controls all VMs.
+# Controls memory of all VMs via the ballooning virt support. The VM must
+# have ballooning support installed and enabled, see README for instructions.
 class Ballooning
   # @param virt_cache [VirtCache]
   def initialize(virt_cache)
@@ -35,6 +36,19 @@ class Ballooning
   # @return [Status | nil] the VM ballooning status
   def status(vm_name)
     @ballooning[vm_name]&.status
+  end
+
+  # User can enable/disable ballooning per VM manually.
+  # @param vm_name [String] vm name
+  # @return [Boolean]
+  def enabled?(vm_name)
+    @ballooning[vm_name]&.enabled? || false
+  end
+
+  # @param vm_name [String]
+  # @param enabled [Boolean]
+  def enabled=(vm_name, enabled)
+    @ballooning[vm_name].enabled = !!enabled
   end
 end
 
@@ -82,6 +96,12 @@ class BallooningVM
     # {Integer | nil} the value of {MemStat.last_updated} or nil.
     # This is the last date of the data upon which a decision was made.
     @last_update_at = nil
+
+    # {Boolean} the user can manually disable ballooning for a VM.
+    @enabled = true
+
+    # {Status}
+    @status = Status.new('', 0)
   end
 
   # - `text` [String] textual representation of the change, useful for debug purposes.
@@ -93,12 +113,7 @@ class BallooningVM
     end
   end
 
-  # @return [Status | nil]
-  attr_reader :status
-
-  def was_running?
-    @was_running
-  end
+  attr_reader :status, :enabled?, :was_running?
 
   # Call every 2 seconds, to control the VM
   def update
