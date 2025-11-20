@@ -126,7 +126,7 @@ class VMWindow < Window
   end
 
   def handle_key(key)
-    super(key)
+    super
 
     current_vm = @line_data[selection.selected]&.vm_name
     return if current_vm.nil?
