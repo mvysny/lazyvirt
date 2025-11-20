@@ -12,6 +12,13 @@ describe Formatter do
     assert_equal "\e[1m\e[34mCPU\e[0m: \e[1m\e[34mx86_64\e[0m: \e[36m16\e[0m cores",
                  f.format(CpuInfo.new('x86_64', 1, 8, 2))
   end
+  it 'formats MemoryStat' do
+    ram = MemoryUsage.new(2.GiB, 1.GiB)
+    swap = MemoryUsage.new(8.GiB, 4.GiB)
+    ms = MemoryStat.new(ram, swap)
+    assert_equal "\e[1m\e[31mRAM\e[0m: \e[36m1G\e[0m/\e[36m2G\e[0m (\e[36m50\e[0m%); \e[1m\e[31mSWAP\e[0m: \e[36m4G\e[0m/\e[36m8G\e[0m (\e[36m50\e[0m%)",
+                 f.format(ms)
+  end
   context 'progress_bar' do
     it 'is empty' do
       assert_equal '', f.progress_bar(0, 100, {})
