@@ -215,8 +215,6 @@ class Window
   end
 
   # Tracks window cursor as it hops over window content lines.
-  # Has one method, {:handle_key} which accepts {String} key, {Integer} line count, and returns true if selection
-  # changed and Window needs to repaint.
   class Cursor
     # @param position [Integer] the initial cursor position
     def initialize(position: 0)
@@ -242,6 +240,9 @@ class Window
 
     attr_reader :position
 
+    # @param key [String] pressed keyboard key
+    # @param line_count [Integer] number of lines in owner {Window}
+    # @return [Boolean] true if the cursor moved and window needs repaint.
     def handle_key(key, line_count)
       if ["\e[B", 'j'].include?(key) # down arrow
         return go_down(line_count)
@@ -274,7 +275,7 @@ class Window
       true
     end
 
-    # Cursor with limited movement.
+    # Cursor which can not hop on just any line - only on allowed lines.
     # @param positions [Array<Integer>] a set of positions the cursor can visit.
     # @param position [Integer] initial position
     class Limited < Cursor
