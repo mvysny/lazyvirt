@@ -161,7 +161,8 @@ class VMEmulator
   def domain_data
     @vms.map do |name, vm|
       state = vm.running? ? :running : :shut_off
-      data = DomainData.new(vm.info, state, DomainData.millis_now, 0, vm.to_mem_stat, [])
+      disk = DiskStat.new('vda', 64.GiB, 128.GiB, 64.GiB)
+      data = DomainData.new(vm.info, state, DomainData.millis_now, 0, vm.to_mem_stat, [disk])
       [name, data]
     end.to_h
   end
@@ -173,15 +174,21 @@ class VMEmulator
 
     @vms[vmid].memory_actual = actual
   end
-end
 
-def vm_emulator_demo
-  e = VMEmulator.new
-  e.add(VMEmulator::VM.simple('BASE', actual: 8.GiB, max_actual: 8.GiB))
-  e.add(VMEmulator::VM.simple('Ubuntu', actual: 8.GiB, max_actual: 16.GiB))
-  e.add(VMEmulator::VM.simple('win11', actual: 8.GiB, max_actual: 16.GiB))
-  e.add(VMEmulator::VM.simple('Fedora', actual: 20.GiB, max_actual: 40.GiB))
-  e.vm('Ubuntu').start
-  e.vm('win11').start
-  e
+  # Creates a bunch of VMs:
+  # - BASE: shut_off
+  # - Ubuntu: running
+  # - win11: running
+  # - Fedora: shut_off
+  # @return A [VirtCmd] compatible class.
+  def self.demo
+    e = VMEmulator.new
+    e.add(VMEmulator::VM.simple('BASE', actual: 8.GiB, max_actual: 8.GiB))
+    e.add(VMEmulator::VM.simple('Ubuntu', actual: 8.GiB, max_actual: 16.GiB))
+    e.add(VMEmulator::VM.simple('win11', actual: 8.GiB, max_actual: 16.GiB))
+    e.add(VMEmulator::VM.simple('Fedora', actual: 20.GiB, max_actual: 40.GiB))
+    e.vm('Ubuntu').start
+    e.vm('win11').start
+    e
+  end
 end

@@ -18,7 +18,7 @@ end
 # Don't use LibVirtClient for now: it doesn't provide all necessary data
 # virt = LibVirtClient.new
 virt = VirtCmd.new if VirtCmd.available?
-virt ||= vm_emulator_demo
+virt ||= VMEmulator.demo
 virt_cache = VirtCache.new(virt)
 
 ballooning = Ballooning.new(virt_cache)
