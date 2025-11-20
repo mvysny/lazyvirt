@@ -164,15 +164,19 @@ class Window
     true
   end
 
+  def rect_off_screen?
+    @rect.empty? || @rect.top.negative? || @rect.left.negative?
+  end
+
   # Fully repaints the window: both frame and Contents
   def repaint
-    return if @rect.empty? || @rect.top.negative? || @rect.left.negative?
-
     repaint_border
     repaint_content
   end
 
   def repaint_border
+    return if rect_off_screen?
+
     frame = TTY::Box.frame(
       width: @rect.width, height: @rect.height, top: @rect.top, left: @rect.left,
       title: { top_left: @caption || '' }
@@ -182,7 +186,7 @@ class Window
   end
 
   def repaint_content
-    return if @rect.empty? || @rect.top.negative? || @rect.left.negative?
+    return if rect_off_screen?
 
     width = @rect.width - 4 # 1 character for window frame, 1 character for padding
 
