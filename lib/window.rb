@@ -267,6 +267,11 @@ class LogWindow < Window
   def initialize
     super('Log')
     self.auto_scroll = true
+    @lock = Mutex.new # multiple threads may log at the same time
+  end
+
+  def add_line(line)
+    @lock.synchronize { super }
   end
 
   # @param logger [TTY::Logger]
