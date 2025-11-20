@@ -45,10 +45,6 @@ end
 
 # Shows a quick overview of all VMs
 class VMWindow < Window
-  # - `vm_name` {String} this line is related to this VM.
-  class LineData < Data.define(:vm_name)
-  end
-
   # @param virt_cache [VirtCache]
   # @param ballooning [Ballooning]
   def initialize(virt_cache, ballooning)
@@ -58,7 +54,7 @@ class VMWindow < Window
     @virt_cache = virt_cache
     # {Ballooning}
     @ballooning = ballooning
-    # {Array<LineData>} data for every line.
+    # {Array<String>} VM name for every line.
     @line_data = []
     self.cursor = Cursor.new
     update
@@ -70,28 +66,27 @@ class VMWindow < Window
     content do |lines|
       @line_data.clear
       domains.each do |domain_name|
-        line_data = LineData.new(domain_name)
         cursor_positions << lines.size
         cache = @virt_cache.cache(domain_name)
         data = cache.data
         lines << format_vm_overview_line(cache)
-        @line_data << line_data
+        @line_data << domain_name
 
         if data.running?
           cpu_usage = @virt_cache.cache(domain_name).guest_cpu_usage.round(2)
           guest_mem_usage = cache.data.mem_stat.guest_mem
           lines << "    #{Rainbow('Guest CPU').bright.blue}: [#{@f.progress_bar(20, 100,
                                                                                 [[cpu_usage.to_i, :dodgerblue]])}] #{Rainbow(cpu_usage).bright.blue}%; #{data.info.cpus} #cpus"
-          @line_data << line_data
+          @line_data << domain_name
           unless guest_mem_usage.nil?
             lines << "    #{Rainbow('Guest RAM').bright.red}: [#{@f.progress_bar(20, guest_mem_usage.total,
                                                                                  [[guest_mem_usage.used, :crimson]])}] #{@f.format(guest_mem_usage)}"
-            @line_data << line_data
+            @line_data << domain_name
           end
         end
         data.disk_stat.each do |ds|
           lines << '    ' + @f.format(ds)
-          @line_data << line_data
+          @line_data << domain_name
         end
       end
     end
@@ -101,8 +96,7 @@ class VMWindow < Window
   def handle_key(key)
     super
 
-    current_vm = @line_data[cursor.position]&.vm_name
-    return if current_vm.nil?
+    current_vm = @line_data[cursor.position] || return
 
     state = @virt_cache.state(current_vm)
 
