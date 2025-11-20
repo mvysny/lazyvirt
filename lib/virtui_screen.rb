@@ -154,6 +154,8 @@ class VMWindow < Window
       else
         $log.error "'#{current_vm}' is not running"
       end
+    elsif key == 'b' # toggle Ballooning
+      $log.error 'toggle ballooning unimplemented'
     elsif key == 'r' # reset
       $log.error 'reset unimplemented'
     elsif key == 'R' # reboot
@@ -168,7 +170,7 @@ class VMWindow < Window
   end
 
   def keyboard_hint
-    "s #{Rainbow('start').cadetblue}  S #{Rainbow('shutdown').cadetblue}  v #{Rainbow('Run viewer').cadetblue}  r #{Rainbow('reset').cadetblue}  R #{Rainbow('reboot').cadetblue}  P #{Rainbow('pause').cadetblue}  p #{Rainbow('unpause').cadetblue}"
+    "s #{Rainbow('start').cadetblue}  S #{Rainbow('Shutdown').cadetblue}  v #{Rainbow('run Viewer').cadetblue}  b #{Rainbow('toggle Ballooning').cadetblue}  r #{Rainbow('reset').cadetblue}  R #{Rainbow('reboot').cadetblue}  P #{Rainbow('pause').cadetblue}  p #{Rainbow('unpause').cadetblue}"
   end
 
   private
