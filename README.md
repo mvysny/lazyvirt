@@ -89,8 +89,6 @@ If the memory usage goes below 55%, a memory is decreased by 10%, but this only 
 
 In other words, if VM needs memory, the memory is given immediately. Afterwards, the memory is slowly decreased as the usage goes down.
 
-At the moment this can not be disabled - I'm working on making this controllable via a keyboard.
-
 At the moment you need to edit virtui sources to configure this: edit `ballooning.rb`: the configuration starts at line 49.
 
 # Developing
