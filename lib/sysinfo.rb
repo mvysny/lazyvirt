@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative 'utils'
+
 # Memory usage: `total` and `available`, in bytes, both {Integer}
 class MemoryUsage < Data.define(:total, :available)
   def used

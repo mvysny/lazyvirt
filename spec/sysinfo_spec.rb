@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require 'minitest/autorun'
+require_relative 'spec_helper'
 require 'sysinfo'
 
-class TestMemoryUsage < Minitest::Test
-  def test_to_s
+describe MemoryUsage do
+  it 'should produce good to_s' do
     assert_equal '0/0 (0%)', MemoryUsage.new(0, 0).to_s
     assert_equal '24/48 (50%)', MemoryUsage.new(48, 24).to_s
     assert_equal '228M/459M (49%)', MemoryUsage.new(481_231_286, 242_134_623).to_s
@@ -12,13 +12,13 @@ class TestMemoryUsage < Minitest::Test
   end
 end
 
-class TestSysInfo < Minitest::Test
-  def test_memory_stats
+describe SysInfo do
+  it 'should parse /proc/meminfo' do
     s = SysInfo.new.memory_stats PROC_MEMINFO
     assert_equal 'RAM: 5.9G/58G (10%), SWAP: 0/8.0G (0%)', s.to_s
   end
 
-  def test_cpu_usage
+  it 'should calculate usage percent' do
     usage = SysInfo.new.cpu_usage(nil, PROC_STAT0)
     assert_equal 0.0, usage.usage_percent
     usage = SysInfo.new.cpu_usage(usage, PROC_STAT1)
@@ -26,8 +26,8 @@ class TestSysInfo < Minitest::Test
   end
 end
 
-class TestCpuStat < Minitest::Test
-  def test_parse
+describe CpuStat do
+  it 'should parse /proc/stat' do
     s = CpuStat.parse(PROC_STAT0)
     assert_equal 'cpu: user=3222 nice=76 system=2433 idle=78684 iowait=416 irq=0 softirq=15 steal=26 guest=0 guest_nice=0',
                  s.to_s
