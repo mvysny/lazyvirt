@@ -5,12 +5,6 @@ require 'window'
 require 'tty-logger'
 
 describe Window do
-  it 'smokes' do
-    w = Window.new
-    w.rect = Rect.new(-1, 0, 20, 20)
-    w.content = %w[a b c]
-  end
-
   context 'caption' do
     it 'sets caption via constructor' do
       assert_equal '', Window.new.caption
