@@ -73,6 +73,24 @@ describe Window do
       w.content = %w[a b c]
       assert_equal 1, w.top_line
     end
+    it 'autoscrolls on add_lines' do
+      w = Window.new
+      w.auto_scroll = true
+      w.rect = Rect.new(-1, -1, 20, 4)
+      w.add_lines %w[foo bar baz a b c]
+      assert_equal 4, w.top_line
+    end
+    it 'autoscrolls on add_line' do
+      w = Window.new
+      w.auto_scroll = true
+      w.rect = Rect.new(-1, -1, 20, 4)
+      w.add_line 'foo'
+      assert_equal 0, w.top_line
+      w.add_line 'bar'
+      assert_equal 0, w.top_line
+      w.add_line 'baz'
+      assert_equal 1, w.top_line
+    end
   end
 
   context 'add lines' do
