@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require 'minitest/autorun'
+require_relative 'spec_helper'
 require 'ballooning'
 require 'virt'
 require 'virtcache'
 require 'timecop'
 require 'vm_emulator'
 
-class TestBallooningVM < Minitest::Test
-  def test_ballooning_does_nothing_on_stopped_machine
+describe BallooningVM do
+  it 'does_nothing_on_stopped_machine' do
     virt = VMEmulator.new
     virt.allow_set_actual = false
     virt.add(VMEmulator::VM.simple('vm0'))
@@ -21,7 +21,7 @@ class TestBallooningVM < Minitest::Test
     end
   end
 
-  def test_ballooning_memory_increase_in_backoff_period
+  it 'memory_increase_in_backoff_period' do
     virt = VMEmulator.new
     virt.allow_set_actual = false
     vm = virt.add(VMEmulator::VM.simple('vm0'))
