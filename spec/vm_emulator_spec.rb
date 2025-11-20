@@ -1,24 +1,24 @@
 # frozen_string_literal: true
 
-require 'minitest/autorun'
+require_relative 'spec_helper'
 require 'vm_emulator'
 require 'virtcache'
 require 'timecop'
 
-class TestVM < Minitest::Test
-  def test_new_vm_not_running
+describe VMEmulator::VM do
+  it 'new_vm_not_running' do
     vm = VMEmulator::VM.simple('a')
     assert !vm.running?
     assert_nil vm.to_mem_stat
   end
 
-  def test_started_vm_is_running
+  it 'test_started_vm_is_running' do
     vm = VMEmulator::VM.simple('a')
     vm.start
     assert vm.running?
   end
 
-  def test_memory_usage_during_startup
+  it 'test_memory_usage_during_startup' do
     vm = VMEmulator::VM.simple('a')
     now = Time.now
     Timecop.freeze(now) do
@@ -43,7 +43,7 @@ class TestVM < Minitest::Test
     end
   end
 
-  def test_still_running_right_after_shutdown
+  it 'test_still_running_right_after_shutdown' do
     # shutdown takes 5 seconds
     vm = VMEmulator::VM.simple('a')
     now = Time.now
@@ -57,7 +57,7 @@ class TestVM < Minitest::Test
     end
   end
 
-  def test_not_running_when_fully_shutdown
+  it 'test_not_running_when_fully_shutdown' do
     # shutdown takes 5 seconds
     vm = VMEmulator::VM.simple('a')
     now = Time.now
@@ -70,7 +70,7 @@ class TestVM < Minitest::Test
     end
   end
 
-  def test_mem_usage_during_shutdown
+  it 'test_mem_usage_during_shutdown' do
     # shutdown takes 5 seconds
     vm = VMEmulator::VM.simple('a')
     now = Time.now
@@ -92,7 +92,7 @@ class TestVM < Minitest::Test
     end
   end
 
-  def test_increase_actual
+  it 'test_increase_actual' do
     vm = VMEmulator::VM.simple('a')
     now = Time.now
     Timecop.freeze(now) do
@@ -104,7 +104,7 @@ class TestVM < Minitest::Test
     end
   end
 
-  def test_decrease_actual
+  it 'test_decrease_actual' do
     vm = VMEmulator::VM.simple('a')
     now = Time.now
     Timecop.freeze(now) do
@@ -124,17 +124,17 @@ class TestVM < Minitest::Test
   end
 end
 
-class TestVMEmulator < Minitest::Test
-  def test_new_empty
+describe VMEmulator do
+  it 'test_new_empty' do
     assert VMEmulator.new.domain_data.empty?
     assert !VMEmulator.new.hostinfo.nil?
   end
 
-  def test_smoke_virtcache
+  it 'test_smoke_virtcache' do
     VirtCache.new(VMEmulator.new)
   end
 
-  def test_virtcache_with_some_vms
+  it 'test_virtcache_with_some_vms' do
     e = VMEmulator.new
     e.add(VMEmulator::VM.simple('vm0')).start
     e.add(VMEmulator::VM.simple('vm1'))
@@ -143,7 +143,7 @@ class TestVMEmulator < Minitest::Test
     assert_equal %w[vm0 vm1], c.domains
   end
 
-  def test_set_active_on_running_vm
+  it 'test_set_active_on_running_vm' do
     e = VMEmulator.new
     e.add(VMEmulator::VM.simple('vm0')).start
     e.set_actual 'vm0', 3 * 1024 * 1024 * 1024
