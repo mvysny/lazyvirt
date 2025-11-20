@@ -95,7 +95,7 @@ At the moment you need to edit virtui sources to configure this: edit `balloonin
 
 Run tests via:
 ```
-$ bundle exec rake test
+$ bundle exec rake test spec
 ```
 
 # Future plans
