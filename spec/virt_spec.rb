@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'minitest/autorun'
+require_relative 'spec_helper'
 require 'virt'
 require 'formatter'
 
@@ -15,13 +15,13 @@ VIRSH_NODEINFO = <<~EOF
   Memory size:         29987652 KiB
 EOF
 
-class TestVirt < Minitest::Test
-  def test_hostinfo
+describe VirtCmd do
+  it 'hostinfo' do
     info = VirtCmd.new.hostinfo(VIRSH_NODEINFO)
     assert_equal 'x86_64: 1/8/2', info.to_s
   end
 
-  def test_domain_data_parse
+  it 'domain_data' do
     result = VirtCmd.new.domain_data(File.read('test/domstats0.txt'), 0)
     assert_equal 2, result.size
     assert_equal 'ubuntu: CPUs: 8, RAM: 12G; running; actual 12G(rss=3.4G); guest: 241M/11G (2%) (unused=11G, disk_caches=37M)',
@@ -31,7 +31,7 @@ class TestVirt < Minitest::Test
     assert_equal 'vda: 23G/64G (36.02%); physical 25G (9.31% overhead)', result['ubuntu'].disk_stat.join(',')
   end
 
-  def test_domain_data_cpu_usage
+  it 'cpu usage' do
     millis_since_epoch = 1_762_378_459_933
     result0 = VirtCmd.new.domain_data(File.read('test/domstats0.txt'), millis_since_epoch)['ubuntu']
     result1 = VirtCmd.new.domain_data(File.read('test/domstats1.txt'), millis_since_epoch + 10 * 1000)['ubuntu']
@@ -41,8 +41,8 @@ class TestVirt < Minitest::Test
   end
 end
 
-class TestDiskStat < Minitest::Test
-  def test_to_s
+describe DiskStat do
+  it 'to_s' do
     ds = DiskStat.new('vda', 20_348_669_952, 68_719_476_736, 20_452_605_952)
     assert_equal 'vda: 19G/64G (29.61%); physical 19G (0.51% overhead)', ds.to_s
     ds = DiskStat.new('sda', 18_022_993_920, 137_438_953_472, 23_508_287_488)
