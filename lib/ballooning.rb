@@ -123,8 +123,21 @@ class BallooningVM
     @was_running
   end
 
+  def enabled=(enabled)
+    @enabled = !!enabled
+    @back_off_until = nil # This is user manual action, user wants to see effects now.
+  end
+
   # Call every 2 seconds, to control the VM
   def update
+    unless @enabled
+      @status = Status.new('ballooning disabled by user', 0)
+      @back_off_until = nil
+      @last_update_at = nil
+      @was_running = false
+      return
+    end
+
     mem_stat = @virt_cache.memstat(@vmid)
     if mem_stat.nil? || !@virt_cache.running?(@vmid)
       # VM is shut off. Don't fiddle with the memory.
