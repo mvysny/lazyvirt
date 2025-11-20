@@ -103,7 +103,7 @@ class Window
     raise 'lines must be Array' unless lines.is_a? Array
 
     @lines = lines
-    repaint_content
+    repaint_content unless update_top_line_if_auto_scroll
   end
 
   # Fully re-populates the contents of this window in a block:
@@ -156,7 +156,8 @@ class Window
   def update_top_line_if_auto_scroll
     return false unless @auto_scroll
 
-    new_top_line = (@lines.size - rect.height - 2).clamp(0, nil)
+    new_top_line = (@lines.size - rect.height + 2).clamp(0, nil)
+    puts new_top_line, @lines.size, rect
     return false unless @top_line != new_top_line
 
     self.top_line = new_top_line

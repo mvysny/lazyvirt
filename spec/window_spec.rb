@@ -66,6 +66,29 @@ describe Window do
       w.auto_scroll = true
       assert_equal 1, w.top_line
     end
+    it 'scrolls the contents automatically 2' do
+      w = Window.new
+      w.rect = Rect.new(-1, -1, 20, 4) # two lines of content
+      w.auto_scroll = true
+      w.content = %w[a b c]
+      assert_equal 1, w.top_line
+    end
+  end
+
+  context 'add lines' do
+    it 'adds 3 lines' do
+      w = Window.new
+      w.add_line 'foo'
+      w.add_line 'bar'
+      w.add_line 'baz'
+      assert_equal %w[foo bar baz], w.content
+    end
+    it 'adds 3 lines at once' do
+      w = Window.new
+      w.add_lines %w[foo bar baz]
+      w.add_lines %w[a b c]
+      assert_equal %w[foo bar baz a b c], w.content
+    end
   end
 
   context 'active' do
