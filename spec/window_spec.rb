@@ -5,16 +5,73 @@ require 'window'
 require 'tty-logger'
 
 describe Window do
-  it('smokes') do
-    Window.new('foo')
+  it 'smokes' do
     w = Window.new
     w.rect = Rect.new(-1, 0, 20, 20)
     w.content = %w[a b c]
-    w.content do
-      %w[a b c]
+  end
+
+  context 'caption' do
+    it 'sets caption via constructor' do
+      assert_equal '', Window.new.caption
+      assert_equal 'foo', Window.new('foo').caption
     end
-    w.auto_scroll = true
-    assert w.auto_scroll
+    it 'sets caption via setter' do
+      w = Window.new
+      w.caption = 'bar'
+      assert_equal 'bar', w.caption
+    end
+  end
+
+  context 'content' do
+    it 'sets empty contents via setter' do
+      w = Window.new
+      w.content = []
+      assert_equal [], w.content
+    end
+    it 'sets simple contents via setter' do
+      w = Window.new
+      w.content = %w[a b c]
+      assert_equal %w[a b c], w.content
+    end
+    it 'sets empty contents via block' do
+      w = Window.new
+      w.content {}
+      assert_equal [], w.content
+    end
+    it 'sets simple contents via block' do
+      w = Window.new
+      w.content do |lines|
+        lines << 'foo'
+        lines << 'bar'
+        lines << 'baz'
+      end
+      assert_equal %w[foo bar baz], w.content
+    end
+  end
+
+  context 'auto_scroll' do
+    it 'is false by default' do
+      assert !Window.new.auto_scroll
+    end
+    it 'sets auto_scroll to true' do
+      w = Window.new
+      w.auto_scroll = true
+      assert w.auto_scroll
+    end
+    it 'scrolls the contents automatically' do
+      w = Window.new
+      w.rect = Rect.new(-1, -1, 20, 4) # two lines of content
+      w.content = %w[a b c]
+      w.auto_scroll = true
+      assert_equal 1, w.top_line
+    end
+  end
+
+  context 'active' do
+    it 'is not active by default' do
+      assert !Window.new.active?
+    end
   end
 end
 

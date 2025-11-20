@@ -69,12 +69,14 @@ class Window
     repaint_content
   end
 
+  # @return [Boolean]
   def active?
     @active
   end
 
+  # @param active [Boolean] true if active. Active window has green border.
   def active=(active)
-    @active = active
+    @active = !!active
     repaint_border
   end
 
@@ -136,6 +138,8 @@ class Window
 
   # Called when a character is pressed on the keyboard
   def handle_key(key)
+    return unless active?
+
     repaint_content if @selection.handle_key(key, @lines.size)
   end
 
