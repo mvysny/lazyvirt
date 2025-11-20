@@ -171,7 +171,7 @@ class VMWindow < Window
   end
 
   def keyboard_hint
-    "s #{Rainbow('start').cadetblue}  S #{Rainbow('Shutdown').cadetblue}  v #{Rainbow('run Viewer').cadetblue}  b #{Rainbow('toggle Ballooning').cadetblue}  r #{Rainbow('reset').cadetblue}  R #{Rainbow('reboot').cadetblue}  P #{Rainbow('pause').cadetblue}  p #{Rainbow('unpause').cadetblue}"
+    "s #{Rainbow('start').cadetblue}  S #{Rainbow('Shutdown').cadetblue}  v #{Rainbow('run Viewer').cadetblue}  b #{Rainbow('toggle autoBallooning').cadetblue}  r #{Rainbow('reset').cadetblue}  R #{Rainbow('reboot').cadetblue}  P #{Rainbow('pause').cadetblue}  p #{Rainbow('unpause').cadetblue}"
   end
 
   private
