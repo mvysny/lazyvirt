@@ -122,3 +122,29 @@ describe LogWindow do
     assert_equal ["\e[31m⨯\e[0m \e[31merror\e[0m   foo", "\e[33m⚠\e[0m \e[33mwarning\e[0m bar"], w.content
   end
 end
+
+describe Window::Cursor do
+  it 'has correct default position' do
+    assert_equal 0, Window::Cursor.new.position
+  end
+  it 'moves down on down arrow' do
+    c = Window::Cursor.new
+    assert c.handle_key("\e[B", 20)
+    assert_equal 1, c.position
+  end
+  it 'wont move down if there are no more lines' do
+    c = Window::Cursor.new
+    assert !c.handle_key("\e[B", 1)
+    assert_equal 0, c.position
+  end
+  it 'moves up on up arrow' do
+    c = Window::Cursor.new(position: 10)
+    assert c.handle_key("\e[A", 20)
+    assert_equal 9, c.position
+  end
+  it 'wont move up when at the top' do
+    c = Window::Cursor.new
+    assert !c.handle_key("\e[A", 20)
+    assert_equal 0, c.position
+  end
+end
