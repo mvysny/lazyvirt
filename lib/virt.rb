@@ -110,6 +110,7 @@ class DomainData < Data.define(:info, :state, :sampled_at, :cpu_time, :mem_stat,
     state == :running
   end
 
+  # @return [Boolean] true if VM has proper ballooning support.
   def balloon?
     mem_stat.guest_data_available?
   end
