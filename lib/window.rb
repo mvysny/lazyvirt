@@ -5,6 +5,7 @@ require 'tty-cursor'
 require 'rainbow'
 require 'unicode/display_width'
 require 'strings-truncation'
+require 'tty-logger'
 
 # A rectangle, with {Integer} `left`, `top`, `width` and `height`.
 class Rect < Data.define(:left, :top, :width, :height)
