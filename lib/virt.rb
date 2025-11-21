@@ -261,6 +261,12 @@ class VirtCmd
   def reboot(domain_name)
     Run.sync("virsh reboot '#{domain_name}'")
   end
+
+  # Resets the VM forcefully.
+  # @param domain_name [String] VM name
+  def reset(domain_name)
+    Run.sync("virsh reset '#{domain_name}'")
+  end
 end
 
 def library_available?(name)

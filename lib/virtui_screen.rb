@@ -130,7 +130,12 @@ class VMWindow < Window
         $log.error "'#{current_vm}' is not running"
       end
     elsif key == 'R' # reset
-      $log.error 'reboot unimplemented'
+      if state == :running
+        $log.info "Resetting '#{current_vm}' forcefully"
+        @virt_cache.virt.reset(current_vm)
+      else
+        $log.error "'#{current_vm}' is not running"
+      end
     elsif key == 'P' # pause
       $log.error 'pause unimplemented'
     elsif key == 'p' # unpause
