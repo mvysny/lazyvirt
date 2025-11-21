@@ -282,6 +282,7 @@ class Window
     class Limited < Cursor
       def initialize(positions, position: positions[0])
         @positions = positions.sort
+        position = 0 if !@positions.include?(position) && !go_up
         super(position: position)
       end
 
