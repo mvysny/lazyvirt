@@ -16,6 +16,8 @@ def async_run(command)
     else
       $log.error("#{command} failed with #{status.exitstatus}: #{output}")
     end
+  rescue StandardError => e
+    $log.fatal("Fatal error running '#{command}'", e)
   end
 
   wait_thr.pid
