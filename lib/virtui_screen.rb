@@ -105,7 +105,7 @@ class VMWindow < Window
       else
         $log.error "'#{current_vm}' is already running"
       end
-    elsif key == 'S' # shutdown gracefully
+    elsif key == 'o' # shutdown gracefully
       if state == :running
         $log.info "Shutting down '#{current_vm}' gracefully"
         @virt_cache.virt.shutdown(current_vm)
@@ -122,9 +122,14 @@ class VMWindow < Window
       else
         $log.error "'#{current_vm}' is not running"
       end
-    elsif key == 'r' # reset
-      $log.error 'reset unimplemented'
-    elsif key == 'R' # reboot
+    elsif key == 'r' # reboot
+      if state == :running
+        $log.info "Asking '#{current_vm}' to reboot"
+        @virt_cache.virt.reboot(current_vm)
+      else
+        $log.error "'#{current_vm}' is not running"
+      end
+    elsif key == 'R' # reset
       $log.error 'reboot unimplemented'
     elsif key == 'P' # pause
       $log.error 'pause unimplemented'
@@ -134,7 +139,7 @@ class VMWindow < Window
   end
 
   def keyboard_hint
-    "s #{Rainbow('start').cadetblue}  S #{Rainbow('Shutdown').cadetblue}  v #{Rainbow('run Viewer').cadetblue}  b #{Rainbow('toggle autoBallooning').cadetblue}  r #{Rainbow('reset').cadetblue}  R #{Rainbow('reboot').cadetblue}  P #{Rainbow('pause').cadetblue}  p #{Rainbow('unpause').cadetblue}"
+    "s #{Rainbow('start').cadetblue}  o #{Rainbow('shutdOwn').cadetblue}  v #{Rainbow('run Viewer').cadetblue}  b #{Rainbow('toggle autoBallooning').cadetblue}  r #{Rainbow('reboot').cadetblue}  R #{Rainbow('reset').cadetblue}  P #{Rainbow('pause').cadetblue}  p #{Rainbow('unpause').cadetblue}"
   end
 
   private
