@@ -308,7 +308,7 @@ class Window
 end
 
 # Shows a log. Plug to `TTY::Logger`
-# to log stuff.
+# to log stuff straight from the logger: [:configure_logger].
 class LogWindow < Window
   def initialize
     super('Log')
