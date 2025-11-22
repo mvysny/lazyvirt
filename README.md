@@ -32,10 +32,12 @@ bin/virtui
 Press `1` to focus the VM list. Select a VM using up/down arrows, then press:
 
 - `s` - starts a VM
-- `<Shift>+s` - sends a shutdown signal to the guest OS which should gracefully shut down the VM.
+- `o` - sends a shutdown signal to the guest OS which should gracefully shut down the VM.
+- `Shift+o` - powers down the VM immediately.
 - `v` - runs a graphical viewer for the VM (`virt-manager` needs to be installed)
 - `b` - toggles automatic ballooning for a VM
-- TODO more as they're implemented.
+- `r` - sends a reset signal to the guest OS to gracefully reboot the machine.
+- `Shift+r` - forcefully reboots the VM.
 
 # Ballooning
 
